@@ -401,12 +401,29 @@ class WFX_API ProcessBar : public Widget
 
 class WFX_API InPlaceWid : public Widget
 {
-
+public:
+	InPlaceWid();
+	virtual ~InPlaceWid();
+public:
+	WFX_BEGIN_MSG_MAP(InPlaceWid)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_CHAIN_MSG_MAP(Widget)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+protected:
+	virtual BOOL Initial() = 0;
+protected:
+	InPlaceWnd* m_pWindow;
 };
 
-class WFX_API TextBox : public Widget
+class WFX_API TextBox : public InPlaceWid
 {
-
+protected:
+	virtual BOOL Initial();
+protected:
+	BOOL m_bReadOnly;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -423,22 +440,64 @@ public:
 	HWND GetHwnd() const;
 	operator HWND() const;
 
-	BOOL RegistWindowClass();
-	BOOL RegistSuperClass();
+	BOOL RegisterWindowClass();
+	BOOL RegisterSuperClass();
 
-protected: 
+	HWND Create(HWND hwndParent, LPCTSTR pszName,
+		DWORD dwStyle, DWORD dwExStyle, const RECT& rc,
+		HMENU hMenu = NULL);
+
+	HWND SubClass(HWND hWnd);
+	void UnSubClass();
+	void ShoWidWnd(BOOL bShow = TRUE, BOOL bTakeFocus = TRUE);
+	BOOL ShowModal();
+	void Close();
+	void CenterWindow();
+	void SetIcon(UINT nRes);
+
+protected:
+	virtual LPCTSTR GetWindowClassName() const = 0;
+	virtual LPCTSTR GetSuperClassName() const;
+	virtual UINT GetClassStyle() const;
+
+	LRESULT SendMessage(UINT nMsg, WPARAM wParam = 0, LPARAM lParam = 0);
+	LRESULT PostMessage(UINT nMsg, WPARAM wParam = 0, LPARAM lParam = 0);
+
+	void ResizeClient(int cx = -1, int cy = -1);
+
+	virtual LRESULT HandleMessage(UINT nMsg, WPARAM wParam, LPARAM lParam);
+	virtual void OnFinalMessage(HWND hWnd);
+
+	static LRESULT CALLBACK __WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK __ControlProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+protected:
 	HWND m_hWnd;
+	WNDPROC m_OldWndProc;
+	BOOL m_bSubclassed;
 };
 
 class WFX_API InPlaceWnd : public Window
 {
+public:
+	InPlaceWnd();
+	virtual ~InPlaceWnd();
+public:
+	virtual BOOL Initial(InPlaceWid* pOwner);
 protected:
 	InPlaceWid* m_pOwner;
 };
 
-class WFX_API EditWnd : public InPlaceWnd
+class WFX_API TextBoxWnd : public InPlaceWnd
 {
-
+public:
+	virtual BOOL Initial(InPlaceWid* pOwner);
+	virtual LPCTSTR GetWindowClassName() const;
+	virtual LPCTSTR GetSuperClassName() const;
+	virtual LRESULT HandleMessage(UINT nMsg, WPARAM wParam, LPARAM lParam);
+	virtual void OnFinalMessage(HWND hWnd);
+	LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };
 
 class WFX_API CommoWnd : public InPlaceWnd

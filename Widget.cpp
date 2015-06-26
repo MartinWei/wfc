@@ -947,3 +947,37 @@ SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
 	return pImage;
 }
 
+InPlaceWid::InPlaceWid()
+: m_pWindow(NULL)
+{
+
+}
+
+InPlaceWid::~InPlaceWid()
+{
+
+}
+
+LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (Initial())
+		return 0;
+	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
+}
+
+InPlaceWnd::InPlaceWnd()
+{
+
+}
+
+InPlaceWnd::~InPlaceWnd()
+{
+
+}
+
+BOOL InPlaceWnd::Initial( InPlaceWid* pOwner )
+{
+	ASSERT(pOwner != NULL);
+	m_pOwner = pOwner;
+	return FALSE;
+}
