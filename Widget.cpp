@@ -110,13 +110,13 @@ void Widget::OnDraw( Gdiplus::Graphics& grph )
 {
 	Gdiplus::RectF rc;
 	GetRect(rc);
-	Gdiplus::SolidBrush bkgnd(m_clrBkgnd);
-	grph.FillRectangle(&bkgnd, rc.X, rc.Y, rc.Width, rc.Height);
+	Gdiplus::SolidBrush brsh(m_clrBkgnd);
+	grph.FillRectangle(&brsh, rc.X, rc.Y, rc.Width, rc.Height);
 	Gdiplus::Pen pn(m_clrFrame);
 	grph.DrawRectangle(&pn, rc);
-	Gdiplus::SolidBrush text(m_clrText);
+	brsh.SetColor(m_clrText);
 	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
-		rc, m_pFormat.get(), &text);
+		rc, m_pFormat.get(), &brsh);
 }
 
 void Widget::SetHwid( HWID hWid )
@@ -463,6 +463,16 @@ LRESULT Widget::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled
 	return 0;
 }
 
+void Widget::SetDrawFunction( DrawFunction pDrawFun )
+{
+	m_pDrawFun = pDrawFun;
+}
+
+DrawFunction Widget::GetDrawFunction() const
+{
+	return m_pDrawFun;
+}
+
 ScrollBar::ScrollBar( int nBar )
 : m_nBar(nBar)
 , m_pScrollInfo(new SCROLLINFO)
@@ -707,240 +717,6 @@ int ScrollBar::GetPos() const
 	return m_pScrollInfo->nPos;
 }
 
-Widget* Dispatcher::FromHwid( HWID hWid ) const
-{
-	std::map<HWID, Widget*>::const_iterator it = 
-		m_Handle2Object.find(hWid);
-	if (it != m_Handle2Object.end())
-	{
-		return it->second;
-	}
-	return NULL;
-}
-
-RECT Dispatcher::FromRect( const Gdiplus::RectF& rc )
-{
-	RECT rcc = {0};
-	rcc.left = (LONG)rc.X;
-	rcc.top = (LONG)rc.Y;
-	rcc.right = rcc.left + (LONG)rc.Width;
-	rcc.bottom = rcc.top + (LONG)rc.Height;
-	return rcc;
-}
-
-void Dispatcher::OnPaint()
-{
-	// Note: Only orphans need to handle WM_PAINT message,
-	// parents will handle it for their children.
-	for (std::map<HWID, Widget*>::iterator it = m_h2oOrphan.begin();
-		it != m_h2oOrphan.end(); ++it)
-	{
-		ASSERT(it->second != NULL);
-		it->second->InvalidWid();
-	}
-}
-
-void Dispatcher::ShowWid( Widget* pWid, WORD wShow )
-{
-	ASSERT(pWid != NULL);
-	pWid->MyShowWid(wShow);
-	std::vector<Widget*> rgpChilren;
-	pWid->GetChildren(rgpChilren);
-	for (std::vector<Widget*>::iterator it = 
-		rgpChilren.begin(); it != rgpChilren.end(); ++it)
-	{
-		ShowWid((*it), wShow);
-	}
-}
-
-void Dispatcher::SetCapture( Widget* pWid )
-{
-	ASSERT(m_hWnd != NULL);
-	ASSERT(pWid != NULL);
-	ASSERT(*pWid != INVALID_HWID);
-	m_h2oCaptured = std::make_pair(pWid->GetHwid(), pWid);
-	::SetCapture(m_hWnd);
-}
-
-void Dispatcher::ReleaseCapture()
-{
-	ClearH2O(m_h2oCaptured);
-	::ReleaseCapture();
-}
-
-void Dispatcher::ClearH2O( std::pair<HWID, Widget*>& h2o )
-{
-	h2o.first = INVALID_HWID;
-	h2o.second = NULL;
-}
-
-Widget* Dispatcher::GetObject( const std::pair<HWID, Widget*>& h2o )
-{
-	if (h2o.first != INVALID_HWID)
-	{
-		ASSERT(h2o.second != NULL);
-		return h2o.second;
-	}
-	return NULL;
-}
-
-void Dispatcher::SetMouseMoveH2O( const std::pair<HWID, Widget*>& h2o )
-{
-	m_h2oLastMouseMove.first = h2o.first;
-	m_h2oLastMouseMove.second = h2o.second;
-}
-
-void Dispatcher::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
-{
-	m_h2oCaptured.first = h2o.first;
-	m_h2oCaptured.second = h2o.second;
-}
-
-void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
-{
-	ASSERT(pWid != NULL);
-	Gdiplus::RectF rcWid;
-	pWid->GetWidRect(rcWid);
-	Gdiplus::RectF rcSB;
-	if (uBarFlag == WESB_BOTH)
-	{
-		if (bEnable)
-		{
-			ScrollBar* pBar = pWid->GetScrollBar(SB_VERT);
-			if (pBar == NULL)
-			{
-				pBar = new ScrollBar(SB_VERT);
-				pBar->Create(rcSB, this, pWid);
-				pWid->SetScrollBar(SB_VERT, pBar);
-			}
-			pBar = pWid->GetScrollBar(SB_HORZ);
-
-			if (pBar == NULL)
-			{
-				pBar = new ScrollBar(SB_HORZ);
-				pBar->Create(rcSB, this, pWid);
-				pWid->SetScrollBar(SB_HORZ, pBar);
-			}
-			pWid->SetSBFlag(WESB_BOTH);
-			pWid->GetWidRect(rcWid);
-		}
-		else
-		{
-			ScrollBar* pBar = pWid->GetScrollBar(SB_VERT);
-			TDEL(pBar);
-			pBar = pWid->GetScrollBar(SB_HORZ);
-			TDEL(pBar);
-			pWid->SetSBFlag(WESB_NONE);
-			pWid->GetWidRect(rcWid);
-		}
-	}
-	else if (uBarFlag == WESB_HORZ)
-	{
-		if (bEnable)
-		{
-			ScrollBar* pBar = pWid->GetScrollBar(SB_HORZ);
-			if (pBar == NULL)
-			{
-				pBar = new ScrollBar(SB_HORZ);
-				pBar->Create(rcSB, this, pWid);
-				pWid->SetScrollBar(SB_HORZ, pBar);
-			}
-			pWid->SetSBFlag(pWid->GetSBFlag() | WESB_HORZ);
-			pWid->GetWidRect(rcWid);
-		}
-		else
-		{
-			ScrollBar* pBar = pWid->GetScrollBar(SB_HORZ);
-			TDEL(pBar);
-			pWid->SetSBFlag(pWid->GetSBFlag() & ~WESB_HORZ);
-			pWid->GetWidRect(rcWid);
-		}
-	}
-	else if (uBarFlag == WESB_VERT)
-	{
-		if (bEnable)
-		{
-			ScrollBar* pBar = pWid->GetScrollBar(WESB_VERT);
-			if (pBar == NULL)
-			{
-				pBar = new ScrollBar(WESB_VERT);
-				pBar->Create(rcSB, this, pWid);
-				pWid->SetScrollBar(WESB_VERT, pBar);
-			}
-			pWid->SetSBFlag(pWid->GetSBFlag() | WESB_VERT);
-			pWid->GetWidRect(rcWid);
-		}
-		else
-		{
-			ScrollBar* pBar = pWid->GetScrollBar(WESB_VERT);
-			TDEL(pBar);
-			pWid->SetSBFlag(pWid->GetSBFlag() & ~WESB_VERT);
-			pWid->GetWidRect(rcWid);
-		}
-	}
-	else
-	{
-		ASSERT(FALSE);
-	}
-}
-
-void Dispatcher::SetScrollInfo( Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw )
-{
-
-}
-
-void Dispatcher::GetScrollInfo( Widget* pWid, int nBar, LPSCROLLINFO lpsi )
-{
-
-}
-
-void Dispatcher::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-
-}
-
-void Dispatcher::SetWidRect( Widget* pWid, const Gdiplus::RectF& rc )
-{
-	Gdiplus::RectF rcWid;
-	pWid->GetRect(rcWid);
-	Gdiplus::RectF rcSB = rcWid;
-	if (pWid->GetSBFlag() & WESB_VERT)
-	{
-		ASSERT(pWid->GetScrollBar(SB_VERT) != NULL);
-		rcSB.X = rcWid.X + rcWid.Width - SIZE_SCROLLBAR - 1;
-		rcSB.Width = SIZE_SCROLLBAR;
-		rcSB.Y += 1;
-		rcSB.Height -= SIZE_SCROLLBAR + 1;
-		pWid->GetScrollBar(SB_VERT)->SetWidRect(rcSB);
-	}
-	rcSB = rcWid;
-	if (pWid->GetSBFlag() & WESB_HORZ)
-	{
-		ASSERT(pWid->GetScrollBar(SB_HORZ) != NULL);
-		rcSB.X += 1;//rcWid.X + rcWid.Width - SIZE_SCROLLBAR - 1;
-		rcSB.Width -= SIZE_SCROLLBAR + 1;
-		rcSB.Y = rcWid.Y + rcWid.Height - SIZE_SCROLLBAR - 1;
-		rcSB.Height = SIZE_SCROLLBAR;
-		pWid->GetScrollBar(SB_HORZ)->SetWidRect(rcSB);
-	}
-	pWid->SendWidMessage(WM_SIZE, 0, 0);
-}
-
-UINT_PTR Dispatcher::SetWidTimer( Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc )
-{
-	return m_pTimer->SetWidTimer(pWid, nIDEvent, uElapse, lpTimerFunc);
-}
-
-BOOL Dispatcher::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
-{
-	return m_pTimer->KillWidTimer(pWid, uIDEvent);
-}
-
-Widget* Dispatcher::GetWidgetFromTimer( UINT_PTR uIDEvent )
-{
-	return m_pTimer->GetWidgetFromTimer(uIDEvent);
-}
-
 SharedPtr<Dispatcher> LayoutBase::Parse( const std::wstring& strXml )
 {
 	SharedPtr<Dispatcher> p;
@@ -1061,3 +837,113 @@ TimerManager::~TimerManager()
 {
 
 }
+
+RoundWid::RoundWid()
+: m_pGrphPath(new Gdiplus::GraphicsPath)
+{
+
+}
+
+RoundWid::~RoundWid()
+{
+
+}
+
+LRESULT RoundWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Gdiplus::RectF rc;
+	GetRect(rc);
+	GdiPlusHelper::GetRoundRect(rc, *m_pGrphPath);
+	return Widget::OnSize(uMsg, wParam, lParam, bHandled);
+}
+
+void RoundWid::OnDraw( Gdiplus::Graphics& grph )
+{
+	Gdiplus::RectF rc;
+	GetRect(rc);
+	Gdiplus::SolidBrush brsh(m_clrBkgnd);
+	grph.FillPath(&brsh, m_pGrphPath.get());
+	Gdiplus::Pen pn(m_clrFrame);
+	grph.DrawPath(&pn, m_pGrphPath.get());
+	brsh.SetColor(m_clrText);
+	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
+		rc, m_pFormat.get(), &brsh);
+}
+
+ImageWid::ImageWid()
+{
+
+}
+
+ImageWid::ImageWid(const std::wstring& strStatic,
+				   const std::wstring& strMouse, 
+				   const std::wstring& strPush,
+				   const std::wstring& strChecked)
+				   : m_pStatic(Gdiplus::Image::FromFile(strStatic.c_str()))
+				   , m_pMouse(Gdiplus::Image::FromFile(strMouse.c_str()))
+				   , m_pPush(Gdiplus::Image::FromFile(strPush.c_str()))
+				   , m_pChecked(Gdiplus::Image::FromFile(strChecked.c_str()))
+{
+}
+
+ImageWid::~ImageWid()
+{
+
+}
+
+void ImageWid::SetImage( WORD wState, const std::wstring& strImage )
+{
+	switch(wState)
+	{
+	case WID_STATE_STATIC:
+		m_pStatic.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		break;
+	case WID_STATE_MOUSE:
+		m_pMouse.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		break;
+	case WID_STATE_PUSH:
+		m_pPush.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		break;
+	case WID_STATE_CHECKED:
+		m_pChecked.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+		break;
+	default:
+		ASSERT(FALSE);
+	}
+}
+
+void ImageWid::SetImage( const std::wstring& strStatic, 
+						const std::wstring& strMouse, 
+						const std::wstring& strPush,
+						const std::wstring& strChecked)
+{
+	m_pStatic.reset(Gdiplus::Image::FromFile(strStatic.c_str()));
+	m_pMouse.reset(Gdiplus::Image::FromFile(strMouse.c_str()));
+	m_pPush.reset(Gdiplus::Image::FromFile(strPush.c_str()));
+	m_pChecked.reset(Gdiplus::Image::FromFile(strChecked.c_str()));
+}
+
+SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
+{
+	SharedPtr<Gdiplus::Image> pImage;
+	switch(GetState())
+	{
+	case WID_STATE_STATIC:
+		pImage = m_pStatic;
+		break;
+	case WID_STATE_MOUSE:
+		pImage = m_pMouse;
+		break;
+	case WID_STATE_PUSH:
+		pImage = m_pPush;
+		break;
+	case WID_STATE_CHECKED:
+		pImage = m_pChecked;
+		break;
+	default:
+		ASSERT(FALSE);
+		pImage = m_pStatic;
+	}
+	return pImage;
+}
+

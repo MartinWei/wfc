@@ -8,7 +8,7 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
-#pragma once
-
-#include "wfx.h"
+#include "StdAfx.h"
 #include "Widget.h"
+
+USING_NAMESPACE_WFX;

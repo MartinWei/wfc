@@ -18,6 +18,17 @@ BEGIN_NAMESPACE_WFX
 class Dispatcher;
 class TimerManager;
 class ScrollBar;
+class Widget;
+class Button;
+class RadioButton;
+class CheckBox;
+class Label;
+class ProcessBar;
+class Window;
+class InPlaceWid;
+class InPlaceWnd;
+class EditWnd;
+class CommoWnd;
 
 //////////////////////////////////////////////////////////////////////////
 // WidgetBase Interface of widget
@@ -27,6 +38,8 @@ public:
 	virtual BOOL ProcessWidMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID) = 0;
 };
+
+typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
 
 //////////////////////////////////////////////////////////////////////////
 // Widget: the root class of ui classes
@@ -128,6 +141,8 @@ public:
 	Gdiplus::Color GetFrameClr() const;
 	void SetTextClr(const Gdiplus::Color& clrText);
 	Gdiplus::Color GetTextColor() const;
+	void SetDrawFunction(DrawFunction pDrawFun);
+	DrawFunction GetDrawFunction() const;
 public:
 	BOOL SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -173,6 +188,7 @@ protected:
 	Gdiplus::Color m_clrBkgnd;
 	Gdiplus::Color m_clrFrame;
 	Gdiplus::Color m_clrText;
+	DrawFunction m_pDrawFun;
 private:
 	// Position
 	Gdiplus::RectF m_rc;
@@ -234,7 +250,7 @@ public:
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
 		WFX_CHAIN_MSG_MAP(Widget)
-		WFX_END_MSG_MAP()
+	WFX_END_MSG_MAP()
 public:
 	int GetBar() const;
 	void SetBar(int nBar);
@@ -265,25 +281,173 @@ protected:
 	SharedPtr<Widget> m_pSlider;
 };
 
-//////////////////////////////////////////////////////////////////////////
-// Window: Window for controls
-//class WWTL_API Window
-//{
-//public:
-//	Window();
-//	virtual ~Window();
-//public:
-//	HWND GetHwnd() const;
-//	operator HWND() const;
-//
-//	BOOL RegistWindowClass();
-//	BOOL RegistSuperClass();
-//
-//
-//protected:
-//	Dispatcher* m_pDispatch;
-//};
+class WFX_API RoundWid : public Widget
+{
+public:
+	RoundWid();
+	virtual ~RoundWid();
 
+public:
+	WFX_BEGIN_MSG_MAP(RoundWid)
+		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_CHAIN_MSG_MAP(Widget)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+protected:
+	virtual void OnDraw(Gdiplus::Graphics& grph);
+protected:
+	SharedPtr<Gdiplus::GraphicsPath> m_pGrphPath;
+};
+
+class WFX_API ImageWid : public RoundWid
+{
+public:
+	ImageWid();
+	ImageWid(const std::wstring& strStatic,
+		const std::wstring& strMouse, 
+		const std::wstring& strPush,
+		const std::wstring& strChecked);
+	virtual ~ImageWid();
+public:
+	void SetImage(WORD wState, const std::wstring& strImage);
+	void SetImage(const std::wstring& strStatic,
+		const std::wstring& strMouse, 
+		const std::wstring& strPush,
+		const std::wstring& strChecked);
+protected:
+	SharedPtr<Gdiplus::Image> GetImageFromState();
+protected:
+	SharedPtr<Gdiplus::Image> m_pStatic;
+	SharedPtr<Gdiplus::Image> m_pMouse;
+	SharedPtr<Gdiplus::Image> m_pPush;
+	SharedPtr<Gdiplus::Image> m_pChecked;
+};
+
+class WFX_API Button : public ImageWid
+{
+public:
+	Button(BOOL bCheckState = FALSE);
+	virtual ~Button();
+public:
+	virtual void OnDraw(Gdiplus::Graphics& grph);
+
+	WFX_BEGIN_MSG_MAP(Button)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		WFX_MESSAGE_HANDLER(WM_UPDATEUISTATE, OnStateChanged)
+		WFX_CHAIN_MSG_MAP(ImageWid)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnStateChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+public:
+	void Check(BOOL bCheck = TRUE);
+	BOOL IsCheck() const;
+protected:
+	BOOL m_bLButtonDown;
+	BOOL m_bChecked;
+	BOOL m_bCheckState;
+};
+
+class WFX_API CheckBoxItem : public Button
+{
+public:
+	CheckBoxItem();
+	CheckBoxItem(const std::wstring& strChecked,
+		const std::wstring& strUnCheck);
+	virtual ~CheckBoxItem();
+public:
+	virtual void OnDraw(Gdiplus::Graphics& grph);
+
+protected:
+	SharedPtr<Gdiplus::Image> GetImage() const;
+
+public:
+	static BOOL DrawCheckBoxItem(Widget* pWid, Gdiplus::Graphics& grph);
+
+protected:
+	SharedPtr<Gdiplus::Image> m_pImageChecked;
+	SharedPtr<Gdiplus::Image> m_pImageUnCheck;
+};
+
+class WFX_API RadioButtonItem : public CheckBoxItem
+{
+public:
+	virtual void OnDraw(Gdiplus::Graphics& grph);
+public:
+	static BOOL DrawRadioButtonItem(Widget* pWid, Gdiplus::Graphics& grph);
+};
+
+class WFX_API CheckBox : public Widget
+{
+
+};
+
+class WFX_API Label : public Widget
+{
+
+};
+
+class WFX_API ProcessBar : public Widget
+{
+
+};
+
+class WFX_API InPlaceWid : public Widget
+{
+
+};
+
+class WFX_API TextBox : public Widget
+{
+
+};
+
+////////////////////////////////////////////////////////////////////////
+// Window: Window for controls
+class WFX_API Window
+{
+public:
+	// !!! m_pDispatch must be the first member
+	SharedPtr<Dispatcher> m_pDispatch;
+public:
+	Window();
+	virtual ~Window();
+public:
+	HWND GetHwnd() const;
+	operator HWND() const;
+
+	BOOL RegistWindowClass();
+	BOOL RegistSuperClass();
+
+protected: 
+	HWND m_hWnd;
+};
+
+class WFX_API InPlaceWnd : public Window
+{
+protected:
+	InPlaceWid* m_pOwner;
+};
+
+class WFX_API EditWnd : public InPlaceWnd
+{
+
+};
+
+class WFX_API CommoWnd : public InPlaceWnd
+{
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// TimerManager: helper class for Dispatcher
 class TimerManager
 {
 	friend class Dispatcher;
@@ -326,6 +490,7 @@ protected:
 protected:
 	void DrawWid(Widget* pWid);
 	void DrawGen(Widget* pWid, Gdiplus::Graphics& grph);
+	void DrawBkgnd(Widget* pWid, const Gdiplus::RectF& rc, Gdiplus::Graphics& grph);
 	void OnPaint();
 protected:
 	void SetWidRect(Widget* pWid, const Gdiplus::RectF& rc);

@@ -85,27 +85,44 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define WID_STATE_STATIC	0
 #define WID_STATE_MOUSE		1
 #define WID_STATE_PUSH		2
+#define WID_STATE_CHECKED	3
 
 // State Color
 #define WID_BKGND_STATIC	RGB(238, 238, 238)
 #define WID_BKGND_MOUSE		RGB(228, 240, 246)
 #define WID_BKGND_PUSH		RGB(179, 224, 249)
+#define WID_BKGND_CHECKED	RGB(201, 234, 252)
 
 #define WID_FRAME_STATIC	RGB(100, 100, 100)
 #define WID_FRAME_MOUSE		RGB(90, 90, 90)
 #define WID_FRAME_PUSH		RGB(190, 190, 190)
+#define WID_FRAME_CHECKED	RGB(45, 212, 255)
 
 #define WID_TEXT_STATIC		RGB(180, 180, 180)
 #define WID_TEXT_MOUSE		RGB(180, 180, 180)
 #define WID_TEXT_PUSH		RGB(255, 255, 128)
+#define WID_TEXT_CHECKED	RGB(0, 0, 0)
 
 #define WID_FONT_STATIC		L"System"
 #define WID_FONT_MOUSE		L"System"
 #define WID_FONT_PUSH		L"System"
+#define WID_FONT_CHECKED	L"System"
 
 #define WID_FSIZE_STATIC	10
 #define WID_FSIZE_MOUSE		10
 #define WID_FSIZE_PUSH		10
+#define WID_FSIZE_CHECKED	10
+
+// check box color
+#define WID_CKB_BKGND		RGB(244, 244, 244)
+#define WID_CKB_FRAMEO		RGB(142, 143, 143)
+#define WID_CKB_FRAMEI		RGB(202, 207, 212)
+#define WID_CKB_CHECK		RGB(49, 52, 124)
+// check box size
+#define WID_CKB_MARGIN		1
+#define WID_CKB_SIZE		13
+
+#define WID_RB_CHECK		RGB(19, 127, 188)
 
 #define WFX_BEGIN_MSG_MAP(theClass)\
 	public:\
@@ -175,7 +192,8 @@ public:
 	~GdiPlusHelper();
 	ULONG_PTR m_nGdiPlusToken;
 public:
-	static BOOL GetRoundRect(const Gdiplus::RectF& rc, Gdiplus::GraphicsPath& path, float r = 10.0);
+	static BOOL GetRoundRect(const Gdiplus::RectF& rc, 
+		Gdiplus::GraphicsPath& path, float r = 10.0);  
 
 };
 

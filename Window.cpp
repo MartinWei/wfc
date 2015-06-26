@@ -8,7 +8,39 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
-#pragma once
-
-#include "wfx.h"
+#include "StdAfx.h"
 #include "Widget.h"
+
+USING_NAMESPACE_WFX;
+
+Window::Window()
+: m_pDispatch(new Dispatcher)
+, m_hWnd(NULL)
+{
+
+}
+
+Window::~Window()
+{
+
+}
+
+HWND Window::GetHwnd() const
+{
+	return m_hWnd;
+}
+
+Window::operator HWND() const
+{
+	return m_hWnd;
+}
+
+BOOL Window::RegistWindowClass()
+{
+	return FALSE;
+}
+
+BOOL Window::RegistSuperClass()
+{
+	return FALSE;
+}
