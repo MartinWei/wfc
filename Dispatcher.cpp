@@ -22,7 +22,7 @@ Dispatcher::Dispatcher( HWND hWnd /*= NULL*/ )
 {
 	ClearH2O(m_h2oLastMouseMove);
 	ClearH2O(m_h2oCaptured);
-	m_pTimer.reset(new TimerManager(this));
+	m_pTimer.reset(new Timer(this));
 }
 
 Dispatcher::~Dispatcher()

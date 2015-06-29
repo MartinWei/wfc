@@ -71,3 +71,8 @@ BOOL RadioButtonItem::DrawRadioButtonItem( Widget* pWid, Gdiplus::Graphics& grph
 
 	return TRUE;
 }
+
+RadioButton::RadioButton()
+{
+	m_pItem.reset(new RadioButtonItem);
+}

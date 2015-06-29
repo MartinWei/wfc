@@ -64,6 +64,10 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define TDEL(p) if ((p) != NULL) { delete (p); (p) = NULL; }
 #endif
 
+#ifndef TDELGDI
+#define TDELGDI(p) if ((p) != NULL) { ::DeleteObject((p)), (p) = NULL; }
+#endif
+
 #ifndef TDELA
 #define TDELA(p) if ((p) != NULL) { delete[] (p); (p) = NULL; }
 #endif
@@ -123,6 +127,12 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define WID_CKB_SIZE		13
 
 #define WID_RB_CHECK		RGB(19, 127, 188)
+
+// TextBox
+#define WID_TBM_READ		0x00000001
+#define WID_TBM_WRITE		0x00000010
+#define WID_TBM_PW			0x00000100
+#define WID_TBM_READWRITE	(WID_TBM_READ | WID_TBM_WRITE)
 
 #define WFX_BEGIN_MSG_MAP(theClass)\
 	public:\

@@ -39,18 +39,18 @@ Window::operator HWND() const
 
 BOOL Window::RegisterWindowClass()
 {
-	WNDCLASS wc = { 0 };
+	WNDCLASSW wc = { 0 };
 	wc.style = GetClassStyle();
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hIcon = NULL;
 	wc.lpfnWndProc = Window::__WndProc;
 	wc.hInstance = Dispatcher::GetInstance();
-	wc.hCursor = ::LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor = ::LoadCursorW(NULL, IDC_ARROW);
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName  = NULL;
 	wc.lpszClassName = GetWindowClassName();
-	ATOM ret = ::RegisterClass(&wc);
+	ATOM ret = ::RegisterClassW(&wc);
 	DWORD dwError = ::GetLastError();
 	ASSERT(ret!=NULL || ::GetLastError()==ERROR_CLASS_ALREADY_EXISTS);
 	return ret != NULL || ::GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
@@ -60,11 +60,11 @@ BOOL Window::RegisterSuperClass()
 {
 	// Get the class information from an existing
 	// window so we can subclass it later on...
-	WNDCLASSEX wc = { 0 };
+	WNDCLASSEXW wc = { 0 };
 	wc.cbSize = sizeof(WNDCLASSEX);
 	if( !::GetClassInfoEx(NULL, GetSuperClassName(), &wc) ) {
 		if( !::GetClassInfoEx(NULL, GetSuperClassName(), &wc) ) {
-			ASSERT(!"Unable to locate window class");
+			ASSERT(!L"Unable to locate window class");
 			return NULL;
 		}
 	}
@@ -72,7 +72,7 @@ BOOL Window::RegisterSuperClass()
 	wc.lpfnWndProc = Window::__ControlProc;
 	wc.hInstance = Dispatcher::GetInstance();
 	wc.lpszClassName = GetWindowClassName();
-	ATOM ret = ::RegisterClassEx(&wc);
+	ATOM ret = ::RegisterClassExW(&wc);
 	DWORD dwError = ::GetLastError();
 	ASSERT(ret!=NULL || ::GetLastError()==ERROR_CLASS_ALREADY_EXISTS);
 	return ret != NULL || ::GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
@@ -177,16 +177,16 @@ UINT Window::GetClassStyle() const
 	return 0;
 }
 
-LRESULT Window::SendMessage( UINT nMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+LRESULT Window::SendMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	ASSERT(::IsWindow(m_hWnd));
-	return ::SendMessage(m_hWnd, nMsg, wParam, lParam);
+	return ::SendMessage(m_hWnd, uMsg, wParam, lParam);
 }
 
-LRESULT Window::PostMessage( UINT nMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+LRESULT Window::PostMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	ASSERT(::IsWindow(m_hWnd));
-	return ::PostMessage(m_hWnd, nMsg, wParam, lParam);
+	return ::PostMessage(m_hWnd, uMsg, wParam, lParam);
 }
 
 void Window::ResizeClient( int cx /*= -1*/, int cy /*= -1*/ )
@@ -201,14 +201,10 @@ void Window::ResizeClient( int cx /*= -1*/, int cy /*= -1*/ )
 	::SetWindowPos(m_hWnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, uFlags);
 }
 
-LRESULT Window::HandleMessage( UINT nMsg, WPARAM wParam, LPARAM lParam )
-{
-	return ::CallWindowProc(m_OldWndProc, m_hWnd, nMsg, wParam, lParam);
-}
 
 void Window::OnFinalMessage( HWND hWnd )
 {
-
+	
 }
 
 LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -232,7 +228,9 @@ LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		}
 	}
 	if( pThis != NULL ) {
-		return pThis->HandleMessage(uMsg, wParam, lParam);
+		LRESULT lResult = 0;
+		pThis->ProcessWidMessage(uMsg, wParam, lParam, lResult, 0);
+		return lResult;
 	} 
 	else {
 		return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -260,9 +258,113 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		}
 	}
 	if( pThis != NULL ) {
-		return pThis->HandleMessage(uMsg, wParam, lParam);
+		LRESULT lResult = 0;
+		pThis->ProcessWidMessage(uMsg, wParam, lParam, lResult, 0);
+		return lResult;
 	} 
 	else {
 		return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
+}
+
+std::wstring Window::GetText() const
+{
+	ASSERT(m_hWnd != NULL);
+	int nLen = GetWindowTextLengthW(m_hWnd) + 1;
+	std::wstring strText;
+	WCHAR* pszText = new WCHAR[nLen];
+	::GetWindowTextW(m_hWnd, pszText, nLen);
+	strText = pszText;
+	TDEL(pszText);
+	return strText;
+}
+
+void Window::SetFont( HFONT hFont ) const
+{
+	SetWindowFont(m_hWnd, hFont, TRUE);
+}
+
+
+void Window::SetText( const std::wstring& strText )
+{
+	ASSERT(m_hWnd != NULL);
+	::SetWindowTextW(m_hWnd, strText.c_str());
+}
+
+BOOL Window::ProcessWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+{
+	if (m_pDispatch != NULL)
+	{
+		m_pDispatch->DispatchMessage(uMsg, wParam, lParam);
+	}
+	lResult = ::CallWindowProc(m_OldWndProc, m_hWnd, uMsg, wParam, lParam);
+	return TRUE;
+}
+
+void Window::GetClientRect( RECT& rc )
+{
+	ASSERT(m_hWnd != NULL);
+	::GetClientRect(m_hWnd, &rc);
+}
+
+InPlaceWid::InPlaceWid()
+: m_pWindow(NULL)
+{
+
+}
+
+InPlaceWid::~InPlaceWid()
+{
+
+}
+
+LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (Initial())
+	{
+		ASSERT(m_pDispatch != NULL);
+		m_pDispatch->DispatchMessage(WM_LBUTTONUP, 0, 0);
+		return 0;
+	}
+	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
+}
+
+InPlaceWnd::InPlaceWnd()
+{
+
+}
+
+InPlaceWnd::~InPlaceWnd()
+{
+
+}
+
+BOOL InPlaceWnd::Initial( InPlaceWid* pOwner )
+{
+	ASSERT(pOwner != NULL);
+	m_pOwner = pOwner;
+	CreateInPlaceWindow();
+	if (m_hWnd != NULL)
+	{
+		::SetFocus(m_hWnd);
+		m_pDispatch->SetHwnd(m_hWnd);
+	}
+	return FALSE;
+}
+
+void InPlaceWnd::OnFinalMessage( HWND hWnd )
+{
+	delete this;
+}
+
+void InPlaceWnd::OnInPlaceWindowKillFocus()
+{
+
+}
+
+LRESULT InPlaceWnd::OnKillFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	OnInPlaceWindowKillFocus();
+	PostMessage(WM_CLOSE);
+	return 0;
 }

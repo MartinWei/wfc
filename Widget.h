@@ -16,7 +16,7 @@ BEGIN_NAMESPACE_WFX
 //////////////////////////////////////////////////////////////////////////
 // forward declare
 class Dispatcher;
-class TimerManager;
+class Timer;
 class ScrollBar;
 class Widget;
 class Button;
@@ -47,7 +47,7 @@ class WFX_API Widget :
 	public WidgetBase
 {
 	friend class Dispatcher;
-	friend class TimerManager;
+	friend class Timer;
 public:
 	Widget(void);
 	virtual ~Widget(void);
@@ -143,6 +143,7 @@ public:
 	Gdiplus::Color GetTextColor() const;
 	void SetDrawFunction(DrawFunction pDrawFun);
 	DrawFunction GetDrawFunction() const;
+	virtual HFONT GetFontObject() const;
 public:
 	BOOL SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -376,6 +377,28 @@ protected:
 	SharedPtr<Gdiplus::Image> m_pImageUnCheck;
 };
 
+class WFX_API CheckBox : public Widget
+{
+public:
+	CheckBox();
+public:
+	WFX_BEGIN_MSG_MAP(CheckBox)
+		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
+		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_CHAIN_MSG_MAP(Widget)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+public:
+	virtual void OnDraw(Gdiplus::Graphics& grph);
+protected:
+	ULONG m_lOffset;
+	SharedPtr<CheckBoxItem> m_pItem;
+};
+
 class WFX_API RadioButtonItem : public CheckBoxItem
 {
 public:
@@ -384,9 +407,10 @@ public:
 	static BOOL DrawRadioButtonItem(Widget* pWid, Gdiplus::Graphics& grph);
 };
 
-class WFX_API CheckBox : public Widget
+class WFX_API RadioButton : public CheckBox
 {
-
+public:
+	RadioButton();
 };
 
 class WFX_API Label : public Widget
@@ -420,15 +444,34 @@ protected:
 
 class WFX_API TextBox : public InPlaceWid
 {
+public:
+	TextBox(WORD wMode = WID_TBM_READWRITE);
+public:
+	void SetMode(WORD wMode, BOOL bAdd = FALSE);
+	WORD GetMode() const;
+	BOOL IsReadonly() const;
+	BOOL IsPassword() const;
 protected:
 	virtual BOOL Initial();
 protected:
-	BOOL m_bReadOnly;
+	WORD m_wMode;
+	BOOL m_bEditting;
+};
+
+class WFX_API ComboBox : public InPlaceWid
+{
+public:
+	ULONG GetSize() const;
+	ULONG GetItemHeight(ULONG nIndex) const;
+	ULONG GetSel() const;
+	Widget* GetWid(ULONG nIndex) const;
+protected:
+	virtual BOOL Initial();
 };
 
 ////////////////////////////////////////////////////////////////////////
 // Window: Window for controls
-class WFX_API Window
+class WFX_API Window : public WidgetBase
 {
 public:
 	// !!! m_pDispatch must be the first member
@@ -454,18 +497,21 @@ public:
 	void Close();
 	void CenterWindow();
 	void SetIcon(UINT nRes);
-
+	std::wstring GetText() const;
+	void SetText(const std::wstring& strText);
+	void SetFont(HFONT hFont) const;
+	void GetClientRect(RECT& rc);
 protected:
 	virtual LPCTSTR GetWindowClassName() const = 0;
 	virtual LPCTSTR GetSuperClassName() const;
 	virtual UINT GetClassStyle() const;
 
-	LRESULT SendMessage(UINT nMsg, WPARAM wParam = 0, LPARAM lParam = 0);
-	LRESULT PostMessage(UINT nMsg, WPARAM wParam = 0, LPARAM lParam = 0);
+	LRESULT SendMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
+	LRESULT PostMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 
+	virtual BOOL ProcessWidMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		LRESULT& lResult, DWORD dwMsgMapID);
 	void ResizeClient(int cx = -1, int cy = -1);
-
-	virtual LRESULT HandleMessage(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	virtual void OnFinalMessage(HWND hWnd);
 
 	static LRESULT CALLBACK __WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -482,8 +528,18 @@ class WFX_API InPlaceWnd : public Window
 public:
 	InPlaceWnd();
 	virtual ~InPlaceWnd();
+	virtual void OnFinalMessage(HWND hWnd);
 public:
-	virtual BOOL Initial(InPlaceWid* pOwner);
+	WFX_BEGIN_MSG_MAP(InPlaceWnd)
+		WFX_MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+		WFX_CHAIN_MSG_MAP(Window)
+	WFX_END_MSG_MAP()
+wfx_msg LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	BOOL& bHandled);
+public:
+	BOOL Initial(InPlaceWid* pOwner);
+	virtual HWND CreateInPlaceWindow() = 0;
+	virtual void OnInPlaceWindowKillFocus();
 protected:
 	InPlaceWid* m_pOwner;
 };
@@ -491,28 +547,51 @@ protected:
 class WFX_API TextBoxWnd : public InPlaceWnd
 {
 public:
-	virtual BOOL Initial(InPlaceWid* pOwner);
-	virtual LPCTSTR GetWindowClassName() const;
+	WFX_BEGIN_MSG_MAP(TextBoxWnd)
+		WFX_MESSAGE_HANDLER(OCM_COMMAND, OnEditChanged)
+		WFX_CHAIN_MSG_MAP(InPlaceWnd)
+	WFX_END_MSG_MAP()
+public:
+	virtual void OnInPlaceWindowKillFocus();
+	virtual HWND CreateInPlaceWindow();
 	virtual LPCTSTR GetSuperClassName() const;
-	virtual LRESULT HandleMessage(UINT nMsg, WPARAM wParam, LPARAM lParam);
-	virtual void OnFinalMessage(HWND hWnd);
-	LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-	LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	virtual LPCTSTR GetWindowClassName() const;
+public:
+	wfx_msg LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };
 
-class WFX_API CommoWnd : public InPlaceWnd
+class WFX_API ComboWnd : public InPlaceWnd
 {
-
+public:
+	ComboWnd();
+public:
+	WFX_BEGIN_MSG_MAP(ComboWnd)
+		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
+		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_CHAIN_MSG_MAP(InPlaceWnd)
+	WFX_END_MSG_MAP()
+public:
+	virtual void OnInPlaceWindowKillFocus();
+	virtual HWND CreateInPlaceWindow();
+	virtual LPCTSTR GetWindowClassName() const;
+public:
+	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+protected:
+	SharedPtr<Widget> m_pRoot;
+	std::vector<Widget*> m_rgpItems;
 };
 
 //////////////////////////////////////////////////////////////////////////
-// TimerManager: helper class for Dispatcher
-class TimerManager
+// Timer: helper class for Dispatcher
+class Timer
 {
 	friend class Dispatcher;
 public:
-	TimerManager(Dispatcher* pDispatch);
-	~TimerManager();
+	Timer(Dispatcher* pDispatch);
+	~Timer();
 public:
 	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
 	BOOL KillWidTimer(Widget* pWid, UINT_PTR uIDEvent);
@@ -529,7 +608,7 @@ protected:
 class WFX_API Dispatcher
 {
 	friend class Widget;
-	friend class TimerManager;
+	friend class Timer;
 public:
 	Dispatcher(HWND hWnd = NULL);
 	~Dispatcher();
@@ -580,13 +659,25 @@ protected:
 	std::map<HWID, Widget*> m_h2oOrphan;
 	std::pair<HWID, Widget*> m_h2oLastMouseMove;
 	std::pair<HWID, Widget*> m_h2oCaptured;
-	SharedPtr<TimerManager> m_pTimer;
+	SharedPtr<Timer> m_pTimer;
 public:
 	static HWID s_hWidBase;
 private:
 	static HINSTANCE s_hInstance;
 };
 
+class GdiObject
+{
+public:
+	static GdiObject& Instance();
+	~GdiObject();
+public:
+	HFONT GetEditFont();
+private:
+	HFONT m_hEditFont;
+private:
+	GdiObject();
+};
 class WFX_API LayoutBase
 {
 public:

@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ComboBox.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Dispatcher.cpp"
 				>
 			</File>
@@ -213,6 +217,10 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\TextBox.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\wfx.cpp"

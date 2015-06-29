@@ -473,6 +473,11 @@ DrawFunction Widget::GetDrawFunction() const
 	return m_pDrawFun;
 }
 
+HFONT Widget::GetFontObject() const
+{
+	return GdiObject::Instance().GetEditFont();
+}
+
 ScrollBar::ScrollBar( int nBar )
 : m_nBar(nBar)
 , m_pScrollInfo(new SCROLLINFO)
@@ -788,14 +793,14 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	return 0;
 }
 
-TimerManager::TimerManager( Dispatcher* pDispatch )
+Timer::Timer( Dispatcher* pDispatch )
 : m_pDispatch(pDispatch)
 {
 
 }
 
 
-UINT_PTR TimerManager::SetWidTimer( Widget* pWid,
+UINT_PTR Timer::SetWidTimer( Widget* pWid,
 								   UINT_PTR nIDEvent, UINT uElapse, 
 								   TIMERPROC lpTimerFunc )
 {
@@ -805,7 +810,7 @@ UINT_PTR TimerManager::SetWidTimer( Widget* pWid,
 	return ::SetTimer(m_pDispatch->GetHwnd(), nIDEvent, uElapse, lpTimerFunc);
 }
 
-BOOL TimerManager::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
+BOOL Timer::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
 {
 	std::map<UINT_PTR, std::pair<HWID, Widget*> >::iterator it =
 		m_Timer.find(uIDEvent);
@@ -816,7 +821,7 @@ BOOL TimerManager::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
 	return ::KillTimer(m_pDispatch->GetHwnd(), uIDEvent);
 }
 
-Widget* TimerManager::GetWidgetFromTimer( UINT_PTR uIDEvent )
+Widget* Timer::GetWidgetFromTimer( UINT_PTR uIDEvent )
 {
 	std::map<UINT_PTR, std::pair<HWID, Widget*> >::iterator it =
 		m_Timer.find(uIDEvent);
@@ -828,12 +833,12 @@ Widget* TimerManager::GetWidgetFromTimer( UINT_PTR uIDEvent )
 	return NULL;
 }
 
-void TimerManager::Destroy( Widget* pWid )
+void Timer::Destroy( Widget* pWid )
 {
 
 }
 
-TimerManager::~TimerManager()
+Timer::~Timer()
 {
 
 }
@@ -947,37 +952,29 @@ SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
 	return pImage;
 }
 
-InPlaceWid::InPlaceWid()
-: m_pWindow(NULL)
+GdiObject::GdiObject()
+:m_hEditFont(NULL)
 {
-
+	LOGFONTW logfont = {0};
+	lstrcpyW(logfont.lfFaceName, WID_FONT_STATIC);
+	logfont.lfHeight = WID_FSIZE_STATIC;
+	logfont.lfWeight = FW_NORMAL;
+	logfont.lfCharSet = DEFAULT_CHARSET;
+	m_hEditFont = ::CreateFontIndirectW(&logfont);
 }
 
-InPlaceWid::~InPlaceWid()
+GdiObject& GdiObject::Instance()
 {
-
+	static GdiObject gdiobj;
+	return gdiobj;
 }
 
-LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+GdiObject::~GdiObject()
 {
-	if (Initial())
-		return 0;
-	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
+	TDELGDI(m_hEditFont);
 }
 
-InPlaceWnd::InPlaceWnd()
+HFONT GdiObject::GetEditFont()
 {
-
-}
-
-InPlaceWnd::~InPlaceWnd()
-{
-
-}
-
-BOOL InPlaceWnd::Initial( InPlaceWid* pOwner )
-{
-	ASSERT(pOwner != NULL);
-	m_pOwner = pOwner;
-	return FALSE;
+	return m_hEditFont;
 }

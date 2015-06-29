@@ -94,3 +94,45 @@ BOOL CheckBoxItem::DrawCheckBoxItem( Widget* pWid, Gdiplus::Graphics& grph )
 
 	return TRUE;
 }
+
+CheckBox::CheckBox()
+: m_pItem(new CheckBoxItem)
+, m_lOffset(0)
+{
+
+}
+
+LRESULT CheckBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Gdiplus::RectF rc;
+	m_pItem->Create(rc, m_pDispatch, this);
+	return 0;
+}
+
+LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Gdiplus::RectF rc;
+	GetRect(rc);
+	rc.Width = WID_CKB_SIZE;
+	rc.X += 2;
+	rc.Y = rc.Y + (rc.Height - WID_CKB_SIZE) / 2;
+	rc.Height = WID_CKB_SIZE;
+	m_pItem->SetWidRect(rc);
+	m_lOffset = WID_CKB_SIZE + 5;
+	return 0;
+}
+
+void CheckBox::OnDraw( Gdiplus::Graphics& grph )
+{
+	Gdiplus::RectF rc;
+	GetRect(rc);
+	Gdiplus::SolidBrush brsh(m_clrBkgnd);
+	grph.FillRectangle(&brsh, rc.X, rc.Y, rc.Width, rc.Height);
+	Gdiplus::Pen pn(m_clrFrame);
+	grph.DrawRectangle(&pn, rc);
+	brsh.SetColor(m_clrText);
+	rc.X += m_lOffset;
+	rc.Width -= m_lOffset;
+	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
+		rc, m_pFormat.get(), &brsh);
+}
