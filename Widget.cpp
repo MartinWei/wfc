@@ -9,7 +9,8 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "Widget.h"
+#include "wfxwid.h"
+#include "wfxgdi.h"
 
 USING_NAMESPACE_WFX;
 
@@ -60,7 +61,7 @@ void Widget::SetRect( const Gdiplus::RectF& rc )
 	m_rc = rc;
 }
 
-BOOL Widget::Create( const Gdiplus::RectF& rc, Dispatcher* pDispatch, 
+BOOL Widget::Create( const Gdiplus::RectF& rc, WfxDispatch* pDispatch, 
 					Widget* pParent /*= NULL*/, BOOL bNC /*= FALSE*/ )
 {
 	ASSERT(pDispatch != NULL);
@@ -286,13 +287,13 @@ void Widget::ShowWid( WORD wShow )
 BOOL Widget::SendWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	LRESULT lResult = 0;
-	return ProcessWidMessage(uMsg, wParam, lParam, lResult, 0);
+	return ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 }
 
 BOOL Widget::PostWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	LRESULT lResult = 0;
-	return ProcessWidMessage(uMsg, wParam, lParam, lResult, 0);
+	return ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 }
 
 UINT_PTR Widget::SetWidTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc )
@@ -722,9 +723,9 @@ int ScrollBar::GetPos() const
 	return m_pScrollInfo->nPos;
 }
 
-SharedPtr<Dispatcher> LayoutBase::Parse( const std::wstring& strXml )
+SharedPtr<WfxDispatch> LayoutBase::Parse( const std::wstring& strXml )
 {
-	SharedPtr<Dispatcher> p;
+	SharedPtr<WfxDispatch> p;
 	return p;
 }
 
@@ -793,7 +794,7 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	return 0;
 }
 
-Timer::Timer( Dispatcher* pDispatch )
+Timer::Timer( WfxDispatch* pDispatch )
 : m_pDispatch(pDispatch)
 {
 
@@ -858,7 +859,7 @@ LRESULT RoundWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 {
 	Gdiplus::RectF rc;
 	GetRect(rc);
-	GdiPlusHelper::GetRoundRect(rc, *m_pGrphPath);
+	CommonDraw::GetRoundRect(rc, *m_pGrphPath);
 	return Widget::OnSize(uMsg, wParam, lParam, bHandled);
 }
 
@@ -950,6 +951,28 @@ SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
 		pImage = m_pStatic;
 	}
 	return pImage;
+}
+
+InPlaceWid::InPlaceWid()
+: m_pWindow(NULL)
+{
+
+}
+
+InPlaceWid::~InPlaceWid()
+{
+
+}
+
+LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	if (Initial())
+	{
+		ASSERT(m_pDispatch != NULL);
+		m_pDispatch->HandleMessage(WM_LBUTTONUP, 0, 0);
+		return 0;
+	}
+	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
 }
 
 GdiObject::GdiObject()

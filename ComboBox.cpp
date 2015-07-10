@@ -9,7 +9,9 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "Widget.h"
+#include "wfxwid.h"
+#include "wfxcmn.h"
+#include "wfxgdi.h"
 
 USING_NAMESPACE_WFX;
 
@@ -30,7 +32,7 @@ HWND ComboWnd::CreateInPlaceWindow()
 	ASSERT(pComboBox->m_pDispatch != NULL);
 	Gdiplus::RectF rcWid;
 	pComboBox->GetRect(rcWid);
-	RECT rc = Dispatcher::FromRect(rcWid);
+	RECT rc = WfxDispatch::FromRect(rcWid);
 	rc.top = rc.bottom;
 	rc.bottom = rc.top + pComboBox->GetSize() * pComboBox->GetItemHeight(0);
 	MapWindowRect(pComboBox->m_pDispatch->GetHwnd(), HWND_DESKTOP, &rc);

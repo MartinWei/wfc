@@ -8,8 +8,33 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
-#include "StdAfx.h"
-#include "wfxwid.h"
-#include "wfxcmn.h"
 
-USING_NAMESPACE_WFX;
+#pragma once
+
+#include "wfx.h"
+
+BEGIN_NAMESPACE_WFX
+
+class Widget;
+class Grid;
+
+class WFX_API LayoutAttribtes
+{
+
+};
+
+class WFX_API LayoutBase
+{
+public:
+	virtual ~LayoutBase() = 0;
+public:
+	virtual Grid* Parse(const std::wstring& strXml) = 0;
+};
+
+class WFX_API Grid : public Widget
+{
+
+};
+
+
+END_NAMESPACE_WFX

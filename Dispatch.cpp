@@ -9,15 +9,16 @@
 // Widget Foundation Classes product.
 //
 #include "stdafx.h"
-#include "Widget.h"
+#include "wfxwid.h"
+#include "wfxgdi.h"
 
 USING_NAMESPACE_WFX;
 
-HWID Dispatcher::s_hWidBase = INVALID_HWID;
+HWID WfxDispatch::s_hWidBase = INVALID_HWID;
 
-HINSTANCE Dispatcher::s_hInstance = NULL;
+HINSTANCE WfxDispatch::s_hInstance = NULL;
 
-Dispatcher::Dispatcher( HWND hWnd /*= NULL*/ )
+WfxDispatch::WfxDispatch( HWND hWnd /*= NULL*/ )
 : m_hWnd(hWnd)
 {
 	ClearH2O(m_h2oLastMouseMove);
@@ -25,22 +26,22 @@ Dispatcher::Dispatcher( HWND hWnd /*= NULL*/ )
 	m_pTimer.reset(new Timer(this));
 }
 
-Dispatcher::~Dispatcher()
+WfxDispatch::~WfxDispatch()
 {
 
 }
 
-void Dispatcher::SetHwnd( HWND hWnd )
+void WfxDispatch::SetHwnd( HWND hWnd )
 {
 	m_hWnd = hWnd;
 }
 
-HWND Dispatcher::GetHwnd() const
+HWND WfxDispatch::GetHwnd() const
 {
 	return m_hWnd;
 }
 
-BOOL Dispatcher::Create( Widget* pThis )
+BOOL WfxDispatch::Create( Widget* pThis )
 {
 	ASSERT(pThis != NULL);
 	ASSERT(pThis->GetHwid() == INVALID_HWID);
@@ -56,7 +57,7 @@ BOOL Dispatcher::Create( Widget* pThis )
 	return TRUE;
 }
 
-BOOL Dispatcher::Destroy( HWID& hWid )
+BOOL WfxDispatch::Destroy( HWID& hWid )
 {
 	std::map<HWID, Widget*>::iterator it =
 		m_Handle2Object.find(hWid);
@@ -87,17 +88,17 @@ BOOL Dispatcher::Destroy( HWID& hWid )
 	return TRUE;
 }
 
-HWID Dispatcher::GenerateHwid()
+HWID WfxDispatch::GenerateHwid()
 {
 	return ++s_hWidBase;
 }
 
-void Dispatcher::RecycleHwid( HWID& hWid )
+void WfxDispatch::RecycleHwid( HWID& hWid )
 {
 	hWid = INVALID_HWID;
 }
 
-void Dispatcher::DrawWid( Widget* pWid )
+void WfxDispatch::DrawWid( Widget* pWid )
 {
 	ASSERT(m_hWnd != NULL);
 	ASSERT(pWid != NULL);
@@ -123,10 +124,9 @@ void Dispatcher::DrawWid( Widget* pWid )
 	::ReleaseDC(m_hWnd, hdc);
 }
 
-void Dispatcher::DrawGen( Widget* pWid, Gdiplus::Graphics& grph)
+void WfxDispatch::DrawGen( Widget* pWid, Gdiplus::Graphics& grph)
 {
 	ASSERT(pWid != NULL);
-	
 	pWid->OnDraw(grph);
 	std::vector<Widget*> rgpChildren;
 	pWid->GetChildren(rgpChildren);
@@ -138,7 +138,7 @@ void Dispatcher::DrawGen( Widget* pWid, Gdiplus::Graphics& grph)
 	}
 }
 
-LRESULT Dispatcher::DispatchMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT WfxDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lResult = 1;
 	POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
@@ -240,7 +240,7 @@ LRESULT Dispatcher::DispatchMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 	return lResult;
 }
 
-Widget* Dispatcher::GetWidPt( POINT pt )
+Widget* WfxDispatch::GetWidPt( POINT pt )
 {
 	Widget* pWid = NULL;
 	std::vector<Widget*> rgpWidInPt;
@@ -270,7 +270,7 @@ Widget* Dispatcher::GetWidPt( POINT pt )
 	return pWid;
 }
 
-Widget* Dispatcher::GetWidPt(const std::vector<Widget*>& rgpWid)
+Widget* WfxDispatch::GetWidPt(const std::vector<Widget*>& rgpWid)
 {
 	Widget* pWid = NULL;
 	std::vector<Widget*>::const_iterator it = rgpWid.begin();
@@ -296,17 +296,17 @@ Widget* Dispatcher::GetWidPt(const std::vector<Widget*>& rgpWid)
 	return pWid;
 }
 
-HINSTANCE Dispatcher::GetInstance()
+HINSTANCE WfxDispatch::GetInstance()
 {
 	return s_hInstance;
 }
 
-void Dispatcher::SetInstance( HINSTANCE hInstance )
+void WfxDispatch::SetInstance( HINSTANCE hInstance )
 {
 	s_hInstance = hInstance;
 }
 
-BOOL Dispatcher::SetParent( Widget* pThis, Widget* pParent )
+BOOL WfxDispatch::SetParent( Widget* pThis, Widget* pParent )
 {
 	ASSERT(pThis != NULL);
 	if (pParent == NULL)
@@ -330,7 +330,7 @@ BOOL Dispatcher::SetParent( Widget* pThis, Widget* pParent )
 	return TRUE;
 }
 
-Widget* Dispatcher::FromHwid( HWID hWid ) const
+Widget* WfxDispatch::FromHwid( HWID hWid ) const
 {
 	std::map<HWID, Widget*>::const_iterator it = 
 		m_Handle2Object.find(hWid);
@@ -341,7 +341,7 @@ Widget* Dispatcher::FromHwid( HWID hWid ) const
 	return NULL;
 }
 
-RECT Dispatcher::FromRect( const Gdiplus::RectF& rc )
+RECT WfxDispatch::FromRect( const Gdiplus::RectF& rc )
 {
 	RECT rcc = {0};
 	rcc.left = (LONG)rc.X;
@@ -351,7 +351,7 @@ RECT Dispatcher::FromRect( const Gdiplus::RectF& rc )
 	return rcc;
 }
 
-void Dispatcher::OnPaint()
+void WfxDispatch::OnPaint()
 {
 	// Note: Only orphans need to handle WM_PAINT message,
 	// parents will handle it for their children.
@@ -363,7 +363,7 @@ void Dispatcher::OnPaint()
 	}
 }
 
-void Dispatcher::ShowWid( Widget* pWid, WORD wShow )
+void WfxDispatch::ShowWid( Widget* pWid, WORD wShow )
 {
 	ASSERT(pWid != NULL);
 	pWid->MyShowWid(wShow);
@@ -376,7 +376,7 @@ void Dispatcher::ShowWid( Widget* pWid, WORD wShow )
 	}
 }
 
-void Dispatcher::SetCapture( Widget* pWid )
+void WfxDispatch::SetCapture( Widget* pWid )
 {
 	ASSERT(m_hWnd != NULL);
 	ASSERT(pWid != NULL);
@@ -385,19 +385,19 @@ void Dispatcher::SetCapture( Widget* pWid )
 	::SetCapture(m_hWnd);
 }
 
-void Dispatcher::ReleaseCapture()
+void WfxDispatch::ReleaseCapture()
 {
 	ClearH2O(m_h2oCaptured);
 	::ReleaseCapture();
 }
 
-void Dispatcher::ClearH2O( std::pair<HWID, Widget*>& h2o )
+void WfxDispatch::ClearH2O( std::pair<HWID, Widget*>& h2o )
 {
 	h2o.first = INVALID_HWID;
 	h2o.second = NULL;
 }
 
-Widget* Dispatcher::GetObject( const std::pair<HWID, Widget*>& h2o )
+Widget* WfxDispatch::GetObject( const std::pair<HWID, Widget*>& h2o )
 {
 	if (h2o.first != INVALID_HWID)
 	{
@@ -407,19 +407,19 @@ Widget* Dispatcher::GetObject( const std::pair<HWID, Widget*>& h2o )
 	return NULL;
 }
 
-void Dispatcher::SetMouseMoveH2O( const std::pair<HWID, Widget*>& h2o )
+void WfxDispatch::SetMouseMoveH2O( const std::pair<HWID, Widget*>& h2o )
 {
 	m_h2oLastMouseMove.first = h2o.first;
 	m_h2oLastMouseMove.second = h2o.second;
 }
 
-void Dispatcher::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
+void WfxDispatch::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
 {
 	m_h2oCaptured.first = h2o.first;
 	m_h2oCaptured.second = h2o.second;
 }
 
-void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
+void WfxDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
 	ASSERT(pWid != NULL);
 	Gdiplus::RectF rcWid;
@@ -507,22 +507,22 @@ void Dispatcher::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= 
 	}
 }
 
-void Dispatcher::SetScrollInfo( Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw )
+void WfxDispatch::SetScrollInfo( Widget* pWid, int nBar, LPCSCROLLINFO lpsi, BOOL redraw )
 {
 
 }
 
-void Dispatcher::GetScrollInfo( Widget* pWid, int nBar, LPSCROLLINFO lpsi )
+void WfxDispatch::GetScrollInfo( Widget* pWid, int nBar, LPSCROLLINFO lpsi )
 {
 
 }
 
-void Dispatcher::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM lParam )
+void WfxDispatch::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 
 }
 
-void Dispatcher::SetWidRect( Widget* pWid, const Gdiplus::RectF& rc )
+void WfxDispatch::SetWidRect( Widget* pWid, const Gdiplus::RectF& rc )
 {
 	Gdiplus::RectF rcWid;
 	pWid->GetRect(rcWid);
@@ -549,22 +549,22 @@ void Dispatcher::SetWidRect( Widget* pWid, const Gdiplus::RectF& rc )
 	pWid->SendWidMessage(WM_SIZE, 0, 0);
 }
 
-UINT_PTR Dispatcher::SetWidTimer( Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc )
+UINT_PTR WfxDispatch::SetWidTimer( Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc )
 {
 	return m_pTimer->SetWidTimer(pWid, nIDEvent, uElapse, lpTimerFunc);
 }
 
-BOOL Dispatcher::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
+BOOL WfxDispatch::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
 {
 	return m_pTimer->KillWidTimer(pWid, uIDEvent);
 }
 
-Widget* Dispatcher::GetWidgetFromTimer( UINT_PTR uIDEvent )
+Widget* WfxDispatch::GetWidgetFromTimer( UINT_PTR uIDEvent )
 {
 	return m_pTimer->GetWidgetFromTimer(uIDEvent);
 }
 
-void Dispatcher::DrawBkgnd( Widget* pWid, const Gdiplus::RectF& rc, Gdiplus::Graphics& grph )
+void WfxDispatch::DrawBkgnd( Widget* pWid, const Gdiplus::RectF& rc, Gdiplus::Graphics& grph )
 {
 	ASSERT(pWid != NULL);
 	Widget* pParent = pWid->GetParent();

@@ -11,4 +11,6 @@
 #pragma once
 
 #include "wfx.h"
-#include "Widget.h"
+#include "wfxgdi.h"
+#include "wfxwid.h"
+#include "wfxcmn.h"

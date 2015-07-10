@@ -15,27 +15,37 @@ BEGIN_NAMESPACE_WFX
 
 //////////////////////////////////////////////////////////////////////////
 // forward declare
-class Dispatcher;
+class WfxDispatch;
 class Timer;
-class ScrollBar;
+
 class Widget;
-class Button;
-class RadioButton;
-class CheckBox;
-class Label;
-class ProcessBar;
+	class Slider;
+	class ScrollBar;
+	class RoundWid;
+		class ImageWid;
+			class Button;
+				class RadioButtonItem;
+				class CheckBoxItem;
+	class CheckBox;
+	class RadioButton;
+	class Label;
+	class ProcessBar;
+
+	class ToolTip;
+	class InPlaceWid;
+
 class Window;
-class InPlaceWid;
-class InPlaceWnd;
-class EditWnd;
-class CommoWnd;
+	class InPlaceWnd;
+		class EditWnd;
+		class ComboWnd;
+
 
 //////////////////////////////////////////////////////////////////////////
 // WidgetBase Interface of widget
 class WFX_API WidgetBase
 {
 public:
-	virtual BOOL ProcessWidMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID) = 0;
 };
 
@@ -46,7 +56,7 @@ typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
 class WFX_API Widget :
 	public WidgetBase
 {
-	friend class Dispatcher;
+	friend class WfxDispatch;
 	friend class Timer;
 public:
 	Widget(void);
@@ -67,7 +77,7 @@ public:
 	WFX_END_MSG_MAP()
 
 public:
-	BOOL Create(const Gdiplus::RectF& rc, Dispatcher* pDispatch,
+	BOOL Create(const Gdiplus::RectF& rc, WfxDispatch* pDispatch,
 		Widget* pParent = NULL, BOOL bNC = FALSE);
 
 	// Position
@@ -95,7 +105,7 @@ public:
 	Widget* GetParent() const;
 	void SetParent(Widget* pParent);
 
-	// For Dispatcher
+	// For WfxDispatch
 protected:
 	void SetMyParent(Widget* pParent);
 	ULONG GetChildren(std::vector<Widget*>& rgpChildren) const;
@@ -181,7 +191,7 @@ private:
 	// Identifier
 public:
 	HWID m_hWid;
-	Dispatcher* m_pDispatch;
+	WfxDispatch* m_pDispatch;
 protected:
 	std::wstring m_strText;
 	SharedPtr<Gdiplus::StringFormat> m_pFormat;
@@ -246,7 +256,7 @@ class WFX_API ScrollBar : public Widget
 public:
 	ScrollBar(int nBar);
 	virtual ~ScrollBar();
-
+public:
 	WFX_BEGIN_MSG_MAP(ScrollBar)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -377,6 +387,11 @@ protected:
 	SharedPtr<Gdiplus::Image> m_pImageUnCheck;
 };
 
+class WFX_API ToolTip : public Button
+{
+
+};
+
 class WFX_API CheckBox : public Widget
 {
 public:
@@ -475,7 +490,7 @@ class WFX_API Window : public WidgetBase
 {
 public:
 	// !!! m_pDispatch must be the first member
-	SharedPtr<Dispatcher> m_pDispatch;
+	SharedPtr<WfxDispatch> m_pDispatch;
 public:
 	Window();
 	virtual ~Window();
@@ -501,6 +516,9 @@ public:
 	void SetText(const std::wstring& strText);
 	void SetFont(HFONT hFont) const;
 	void GetClientRect(RECT& rc);
+	UINT_PTR SetTimer(UINT_PTR nIDEvent,
+		UINT uElapse,
+		TIMERPROC lpTimerFunc) const;
 protected:
 	virtual LPCTSTR GetWindowClassName() const = 0;
 	virtual LPCTSTR GetSuperClassName() const;
@@ -509,7 +527,7 @@ protected:
 	LRESULT SendMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	LRESULT PostMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 
-	virtual BOOL ProcessWidMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
 	void ResizeClient(int cx = -1, int cy = -1);
 	virtual void OnFinalMessage(HWND hWnd);
@@ -584,13 +602,18 @@ protected:
 	std::vector<Widget*> m_rgpItems;
 };
 
+class WFX_API ToolTipWnd : public Window
+{
+
+};
+
 //////////////////////////////////////////////////////////////////////////
-// Timer: helper class for Dispatcher
+// Timer: helper class for WfxDispatch
 class Timer
 {
-	friend class Dispatcher;
+	friend class WfxDispatch;
 public:
-	Timer(Dispatcher* pDispatch);
+	Timer(WfxDispatch* pDispatch);
 	~Timer();
 public:
 	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
@@ -598,20 +621,20 @@ public:
 	Widget* GetWidgetFromTimer(UINT_PTR uIDEvent);
 	void Destroy(Widget* pWid);
 protected:
-	Dispatcher* m_pDispatch;
+	WfxDispatch* m_pDispatch;
 	std::map<UINT_PTR, 
 		std::pair<HWID, Widget*> > m_Timer;
 };
 
 //////////////////////////////////////////////////////////////////////////
-// Dispatcher: dispatch messages for widget
-class WFX_API Dispatcher
+// WfxDispatch: dispatch messages for widget
+class WFX_API WfxDispatch
 {
 	friend class Widget;
 	friend class Timer;
 public:
-	Dispatcher(HWND hWnd = NULL);
-	~Dispatcher();
+	WfxDispatch(HWND hWnd = NULL);
+	~WfxDispatch();
 public:
 	void SetHwnd(HWND hWnd);
 	HWND GetHwnd() const;
@@ -634,7 +657,7 @@ protected:
 	void SetWidRect(Widget* pWid, const Gdiplus::RectF& rc);
 	void ShowWid(Widget* pWid, WORD wShow);
 public:
-	LRESULT DispatchMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	Widget* GetWidPt(POINT pt);
 	Widget* GetWidPt(const std::vector<Widget*>& rgpWid);
 	Widget* FromHwid(HWID hWid) const;
@@ -681,7 +704,7 @@ private:
 class WFX_API LayoutBase
 {
 public:
-	virtual SharedPtr<Dispatcher> Parse(const std::wstring& strXml);
+	virtual SharedPtr<WfxDispatch> Parse(const std::wstring& strXml);
 };
 
 END_NAMESPACE_WFX

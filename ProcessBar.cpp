@@ -9,6 +9,7 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "Widget.h"
+#include "wfxwid.h"
+#include "wfxcmn.h"
 
 USING_NAMESPACE_WFX;

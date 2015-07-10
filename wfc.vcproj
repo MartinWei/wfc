@@ -114,7 +114,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;WFC_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;WFX_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -183,11 +183,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Dispatcher.cpp"
+				RelativePath=".\Dispatch.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\Label.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ListCtrl.cpp"
 				>
 			</File>
 			<File
@@ -227,6 +231,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wfxgdi.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Widget.cpp"
 				>
 			</File>
@@ -253,11 +261,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wfxcmn.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxgdi.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxlayout.h"
+				>
+			</File>
+			<File
 				RelativePath=".\wfxlib.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Widget.h"
+				RelativePath=".\wfxwid.h"
 				>
 			</File>
 		</Filter>

@@ -9,7 +9,8 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "Widget.h"
+#include "wfxwid.h"
+#include "wfxcmn.h"
 
 USING_NAMESPACE_WFX;
 
@@ -20,7 +21,7 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 	ASSERT(pTextBox->m_pDispatch != NULL);
 	Gdiplus::RectF rcWid;
 	pTextBox->GetRect(rcWid);
-	RECT rc = Dispatcher::FromRect(rcWid);
+	RECT rc = WfxDispatch::FromRect(rcWid);
 	::InflateRect(&rc, -1, -1);
 	Create(m_pOwner->m_pDispatch->GetHwnd(),
 		NULL, WS_CHILD, ES_AUTOHSCROLL, rc);

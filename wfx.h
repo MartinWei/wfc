@@ -134,9 +134,12 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define WID_TBM_PW			0x00000100
 #define WID_TBM_READWRITE	(WID_TBM_READ | WID_TBM_WRITE)
 
+// ListCtrl
+#define WID_LC_HEAD_HEIGHT	20
+
 #define WFX_BEGIN_MSG_MAP(theClass)\
 	public:\
-	BOOL ProcessWidMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID)\
+	BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID)\
 {\
 	BOOL bHandled = TRUE;\
 	(uMsg); \
@@ -159,7 +162,7 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 
 #define WFX_CHAIN_MSG_MAP(theChainClass) \
 { \
-	if(theChainClass::ProcessWidMessage(uMsg, wParam, lParam, lResult, dwMsgMapID)) \
+	if(theChainClass::ProcessMessage(uMsg, wParam, lParam, lResult, dwMsgMapID)) \
 	return TRUE; \
 }
 
@@ -175,42 +178,10 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 
 #define wfx_msg
 
-BEGIN_NAMESPACE_WFX
-
-class WFX_API MemDC
-{
-public:
-	MemDC(HDC hdc, const RECT& rc);
-	~MemDC();
-public:
-	operator HDC();
-private:
-	HDC m_hdc;
-	HDC m_hdcMem;
-	RECT m_rc;
-	HBITMAP m_hBitmap;
-	HGDIOBJ m_hOldBitmap;
-	LONG m_lWidth;
-	LONG m_lHeight;
-	POINT m_ptOrg;
-};
-
-class WFX_API GdiPlusHelper
-{
-public:
-	GdiPlusHelper();
-	~GdiPlusHelper();
-	ULONG_PTR m_nGdiPlusToken;
-public:
-	static BOOL GetRoundRect(const Gdiplus::RectF& rc, 
-		Gdiplus::GraphicsPath& path, float r = 10.0);  
-
-};
-
-extern WFX_API GdiPlusHelper gdiplushelper;
-
-END_NAMESPACE_WFX
-
 #define __begin_mem_draw { 
 
 #define __end_mem_draw }
+
+typedef SharedPtr<Gdiplus::Image>			WfxImagePtr;
+typedef SharedPtr<Gdiplus::StringFormat>	WfxFormatPtr;
+typedef SharedPtr<Gdiplus::Font>			WfxFontPtr;

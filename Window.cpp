@@ -9,12 +9,12 @@
 // Widget Foundation Classes product.
 //
 #include "StdAfx.h"
-#include "Widget.h"
+#include "wfxwid.h"
 
 USING_NAMESPACE_WFX;
 
 Window::Window()
-: m_pDispatch(new Dispatcher)
+: m_pDispatch(new WfxDispatch)
 , m_hWnd(NULL)
 , m_OldWndProc(::DefWindowProc)
 , m_bSubclassed(FALSE)
@@ -45,7 +45,7 @@ BOOL Window::RegisterWindowClass()
 	wc.cbWndExtra = 0;
 	wc.hIcon = NULL;
 	wc.lpfnWndProc = Window::__WndProc;
-	wc.hInstance = Dispatcher::GetInstance();
+	wc.hInstance = WfxDispatch::GetInstance();
 	wc.hCursor = ::LoadCursorW(NULL, IDC_ARROW);
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName  = NULL;
@@ -70,7 +70,7 @@ BOOL Window::RegisterSuperClass()
 	}
 	m_OldWndProc = wc.lpfnWndProc;
 	wc.lpfnWndProc = Window::__ControlProc;
-	wc.hInstance = Dispatcher::GetInstance();
+	wc.hInstance = WfxDispatch::GetInstance();
 	wc.lpszClassName = GetWindowClassName();
 	ATOM ret = ::RegisterClassExW(&wc);
 	DWORD dwError = ::GetLastError();
@@ -84,7 +84,7 @@ HWND Window::Create( HWND hwndParent, LPCTSTR pszName, DWORD dwStyle, DWORD dwEx
 	if( GetSuperClassName() == NULL && !RegisterWindowClass() ) return NULL;
 	LPCTSTR pszWindowClassName = GetWindowClassName();
 	m_hWnd = ::CreateWindowEx(dwExStyle, pszWindowClassName, pszName, dwStyle, 
-		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, Dispatcher::GetInstance(), this);
+		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, WfxDispatch::GetInstance(), this);
 	ASSERT(m_hWnd!=NULL);
 	return m_hWnd;
 }
@@ -229,7 +229,7 @@ LRESULT CALLBACK Window::__WndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 	}
 	if( pThis != NULL ) {
 		LRESULT lResult = 0;
-		pThis->ProcessWidMessage(uMsg, wParam, lParam, lResult, 0);
+		pThis->ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 		return lResult;
 	} 
 	else {
@@ -259,7 +259,7 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 	}
 	if( pThis != NULL ) {
 		LRESULT lResult = 0;
-		pThis->ProcessWidMessage(uMsg, wParam, lParam, lResult, 0);
+		pThis->ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 		return lResult;
 	} 
 	else {
@@ -291,11 +291,11 @@ void Window::SetText( const std::wstring& strText )
 	::SetWindowTextW(m_hWnd, strText.c_str());
 }
 
-BOOL Window::ProcessWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+BOOL Window::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
 	if (m_pDispatch != NULL)
 	{
-		m_pDispatch->DispatchMessage(uMsg, wParam, lParam);
+		m_pDispatch->HandleMessage(uMsg, wParam, lParam);
 	}
 	lResult = ::CallWindowProc(m_OldWndProc, m_hWnd, uMsg, wParam, lParam);
 	return TRUE;
@@ -307,26 +307,9 @@ void Window::GetClientRect( RECT& rc )
 	::GetClientRect(m_hWnd, &rc);
 }
 
-InPlaceWid::InPlaceWid()
-: m_pWindow(NULL)
+UINT_PTR Window::SetTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc ) const
 {
-
-}
-
-InPlaceWid::~InPlaceWid()
-{
-
-}
-
-LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	if (Initial())
-	{
-		ASSERT(m_pDispatch != NULL);
-		m_pDispatch->DispatchMessage(WM_LBUTTONUP, 0, 0);
-		return 0;
-	}
-	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
+	return ::SetTimer(m_hWnd, nIDEvent, uElapse, lpTimerFunc);
 }
 
 InPlaceWnd::InPlaceWnd()
