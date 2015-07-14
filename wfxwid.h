@@ -15,7 +15,7 @@ BEGIN_NAMESPACE_WFX
 
 //////////////////////////////////////////////////////////////////////////
 // forward declare
-class WfxDispatch;
+class WidDispatch;
 class Timer;
 
 class Widget;
@@ -56,7 +56,7 @@ typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
 class WFX_API Widget :
 	public WidgetBase
 {
-	friend class WfxDispatch;
+	friend class WidDispatch;
 	friend class Timer;
 public:
 	Widget(void);
@@ -77,14 +77,13 @@ public:
 	WFX_END_MSG_MAP()
 
 public:
-	BOOL Create(const Gdiplus::RectF& rc, WfxDispatch* pDispatch,
+	BOOL Create(const RECT& rc, WidDispatch* pDispatch,
 		Widget* pParent = NULL, BOOL bNC = FALSE);
-
 	// Position
 public:
-	void GetRect(Gdiplus::RectF& rc) const;
-	void GetWidRect(Gdiplus::RectF& rc);
-	void SetWidRect(const Gdiplus::RectF& rc);
+	RECT GetRect() const;
+	RECT GetWidRect() const;
+	void SetWidRect(const RECT& rc);
 	void ShowWid(WORD wShow);
 	BOOL IsShow() const;
 	void SetCapture();
@@ -92,20 +91,20 @@ public:
 	virtual void EstimateVirtualSize();
 
 	// Size
-	Gdiplus::SizeF GetVirtualSize() const;
-	void SetVirtualSize(const Gdiplus::SizeF& sz);
+	/*Gdiplus::SizeF GetVirtualSize() const;
+	void SetVirtualSize(const Gdiplus::SizeF& sz);*/
 
 protected:
 	void MyShowWid(WORD wShow);
 
 private:
-	void SetRect(const Gdiplus::RectF& rc);
+	void SetRect(const RECT& rc);
 public:
 	// Generation
 	Widget* GetParent() const;
 	void SetParent(Widget* pParent);
 
-	// For WfxDispatch
+	// For WidDispatch
 protected:
 	void SetMyParent(Widget* pParent);
 	ULONG GetChildren(std::vector<Widget*>& rgpChildren) const;
@@ -119,7 +118,7 @@ public:
 	// Graphics
 	void InvalidWid();
 protected:
-	virtual void OnDraw(Gdiplus::Graphics& grph);
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 
 protected:
 	void SetHwid(HWID hWid);
@@ -141,16 +140,7 @@ protected:
 public:
 	void SetText(const std::wstring& strText);
 	std::wstring GetText() const;
-	void SetFormat(const SharedPtr<Gdiplus::StringFormat>& pFormat);
-	const SharedPtr<Gdiplus::StringFormat> GetFormat() const;
-	void SetFont(const SharedPtr<Gdiplus::Font>& pFont);
-	const SharedPtr<Gdiplus::Font> GetFont() const;
-	void SetBkgnd(const Gdiplus::Color& clrBkgnd);
-	Gdiplus::Color GetBkgnd() const;
-	void SetFrameClr(const Gdiplus::Color& clrFrame);
-	Gdiplus::Color GetFrameClr() const;
-	void SetTextClr(const Gdiplus::Color& clrText);
-	Gdiplus::Color GetTextColor() const;
+
 	void SetDrawFunction(DrawFunction pDrawFun);
 	DrawFunction GetDrawFunction() const;
 	virtual HFONT GetFontObject() const;
@@ -191,19 +181,19 @@ private:
 	// Identifier
 public:
 	HWID m_hWid;
-	WfxDispatch* m_pDispatch;
+	WidDispatch* m_pDispatch;
 protected:
 	std::wstring m_strText;
-	SharedPtr<Gdiplus::StringFormat> m_pFormat;
-	SharedPtr<Gdiplus::Font> m_pFont;
-	Gdiplus::Color m_clrBkgnd;
-	Gdiplus::Color m_clrFrame;
-	Gdiplus::Color m_clrText;
+	DWORD m_dwFormat;
+	SharedPtr<LOGFONTW> m_pFont;
+	COLORREF m_clrBkgnd;
+	COLORREF m_clrFrame;
+	COLORREF m_clrText;
 	DrawFunction m_pDrawFun;
 private:
 	// Position
-	Gdiplus::RectF m_rc;
-	Gdiplus::RectF m_rcWid;
+	RECT m_rc;
+	RECT m_rcWid;
 	BOOL m_bNC;
 	WORD m_wShow;
 
@@ -219,7 +209,7 @@ private:
 	std::vector<UINT_PTR> m_rgTimer;
 
 	// Size
-	Gdiplus::SizeF m_szVirtual;
+	SIZE m_szVirtual;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -244,11 +234,14 @@ public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+protected:
 	BOOL m_bLButtonDown;
 	BOOL m_bInSlider;
 	POINT m_ptLButtonDown;
 	int m_nBar;
 };
+
 //////////////////////////////////////////////////////////////////////////
 // ScrollBar: Common ScrollBar
 class WFX_API ScrollBar : public Widget
@@ -307,12 +300,12 @@ public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
-	virtual void OnDraw(Gdiplus::Graphics& grph);
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 protected:
 	SharedPtr<Gdiplus::GraphicsPath> m_pGrphPath;
 };
 
-class WFX_API ImageWid : public RoundWid
+class WFX_API ImageWid : public Widget
 {
 public:
 	ImageWid();
@@ -342,7 +335,7 @@ public:
 	Button(BOOL bCheckState = FALSE);
 	virtual ~Button();
 public:
-	virtual void OnDraw(Gdiplus::Graphics& grph);
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 
 	WFX_BEGIN_MSG_MAP(Button)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
@@ -374,13 +367,10 @@ public:
 		const std::wstring& strUnCheck);
 	virtual ~CheckBoxItem();
 public:
-	virtual void OnDraw(Gdiplus::Graphics& grph);
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 
 protected:
 	SharedPtr<Gdiplus::Image> GetImage() const;
-
-public:
-	static BOOL DrawCheckBoxItem(Widget* pWid, Gdiplus::Graphics& grph);
 
 protected:
 	SharedPtr<Gdiplus::Image> m_pImageChecked;
@@ -408,7 +398,7 @@ public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
-	virtual void OnDraw(Gdiplus::Graphics& grph);
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 protected:
 	ULONG m_lOffset;
 	SharedPtr<CheckBoxItem> m_pItem;
@@ -417,7 +407,7 @@ protected:
 class WFX_API RadioButtonItem : public CheckBoxItem
 {
 public:
-	virtual void OnDraw(Gdiplus::Graphics& grph);
+	virtual void OnDraw(HDC hdc, const RECT& rc);
 public:
 	static BOOL DrawRadioButtonItem(Widget* pWid, Gdiplus::Graphics& grph);
 };
@@ -490,7 +480,7 @@ class WFX_API Window : public WidgetBase
 {
 public:
 	// !!! m_pDispatch must be the first member
-	SharedPtr<WfxDispatch> m_pDispatch;
+	SharedPtr<WidDispatch> m_pDispatch;
 public:
 	Window();
 	virtual ~Window();
@@ -608,12 +598,12 @@ class WFX_API ToolTipWnd : public Window
 };
 
 //////////////////////////////////////////////////////////////////////////
-// Timer: helper class for WfxDispatch
+// Timer: helper class for WidDispatch
 class Timer
 {
-	friend class WfxDispatch;
+	friend class WidDispatch;
 public:
-	Timer(WfxDispatch* pDispatch);
+	Timer(WidDispatch* pDispatch);
 	~Timer();
 public:
 	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
@@ -621,20 +611,20 @@ public:
 	Widget* GetWidgetFromTimer(UINT_PTR uIDEvent);
 	void Destroy(Widget* pWid);
 protected:
-	WfxDispatch* m_pDispatch;
+	WidDispatch* m_pDispatch;
 	std::map<UINT_PTR, 
 		std::pair<HWID, Widget*> > m_Timer;
 };
 
 //////////////////////////////////////////////////////////////////////////
-// WfxDispatch: dispatch messages for widget
-class WFX_API WfxDispatch
+// WidDispatch: dispatch messages for widget
+class WFX_API WidDispatch
 {
 	friend class Widget;
 	friend class Timer;
 public:
-	WfxDispatch(HWND hWnd = NULL);
-	~WfxDispatch();
+	WidDispatch(HWND hWnd = NULL);
+	~WidDispatch();
 public:
 	void SetHwnd(HWND hWnd);
 	HWND GetHwnd() const;
@@ -649,12 +639,13 @@ protected:
 	void SetCapturedH2O(const std::pair<HWID, Widget*>& h2o);
 	Widget* GetObject(const std::pair<HWID, Widget*>& h2o);
 protected:
-	void DrawWid(Widget* pWid);
-	void DrawGen(Widget* pWid, Gdiplus::Graphics& grph);
-	void DrawBkgnd(Widget* pWid, const Gdiplus::RectF& rc, Gdiplus::Graphics& grph);
-	void OnPaint();
+	void DrawWid(Widget* pWid, const RECT& rcPaint);
+	void DrawGen(Widget* pWid, HDC hdc, const RECT& rcPaint);
+	void DrawBkgnd(Widget* pWid, HDC hdc, const RECT& rcPaint);
+	void OnPaint(const RECT& rcPaint);
+	void Invalidate(const RECT& rc);
 protected:
-	void SetWidRect(Widget* pWid, const Gdiplus::RectF& rc);
+	void SetWidRect(Widget* pWid, const RECT& rc);
 	void ShowWid(Widget* pWid, WORD wShow);
 public:
 	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -674,7 +665,7 @@ public:
 public:
 	static HINSTANCE GetInstance();
 	static void SetInstance(HINSTANCE hInstance);
-	static RECT FromRect(const Gdiplus::RectF& rc);
+	static RECT FromRect(const RECT& rc);
 protected:
 	HWND m_hWnd;
 	std::vector<HWID> m_rghWid;
@@ -704,7 +695,7 @@ private:
 class WFX_API LayoutBase
 {
 public:
-	virtual SharedPtr<WfxDispatch> Parse(const std::wstring& strXml);
+	virtual SharedPtr<WidDispatch> Parse(const std::wstring& strXml);
 };
 
 END_NAMESPACE_WFX

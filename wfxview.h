@@ -17,11 +17,16 @@ BEGIN_NAMESPACE_WFX
 
 class WidgetBase;
 class Widget;
+class Document;
 
 class WFX_API View : public Widget
 {
-
+protected:
+	View();
+public:
+	Document* GetDocument() const;
+protected:
+	Document* m_pDoc;
 };
-
 
 END_NAMESPACE_WFX

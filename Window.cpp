@@ -14,7 +14,7 @@
 USING_NAMESPACE_WFX;
 
 Window::Window()
-: m_pDispatch(new WfxDispatch)
+: m_pDispatch(new WidDispatch)
 , m_hWnd(NULL)
 , m_OldWndProc(::DefWindowProc)
 , m_bSubclassed(FALSE)
@@ -45,7 +45,7 @@ BOOL Window::RegisterWindowClass()
 	wc.cbWndExtra = 0;
 	wc.hIcon = NULL;
 	wc.lpfnWndProc = Window::__WndProc;
-	wc.hInstance = WfxDispatch::GetInstance();
+	wc.hInstance = WidDispatch::GetInstance();
 	wc.hCursor = ::LoadCursorW(NULL, IDC_ARROW);
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName  = NULL;
@@ -70,7 +70,7 @@ BOOL Window::RegisterSuperClass()
 	}
 	m_OldWndProc = wc.lpfnWndProc;
 	wc.lpfnWndProc = Window::__ControlProc;
-	wc.hInstance = WfxDispatch::GetInstance();
+	wc.hInstance = WidDispatch::GetInstance();
 	wc.lpszClassName = GetWindowClassName();
 	ATOM ret = ::RegisterClassExW(&wc);
 	DWORD dwError = ::GetLastError();
@@ -84,7 +84,7 @@ HWND Window::Create( HWND hwndParent, LPCTSTR pszName, DWORD dwStyle, DWORD dwEx
 	if( GetSuperClassName() == NULL && !RegisterWindowClass() ) return NULL;
 	LPCTSTR pszWindowClassName = GetWindowClassName();
 	m_hWnd = ::CreateWindowEx(dwExStyle, pszWindowClassName, pszName, dwStyle, 
-		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, WfxDispatch::GetInstance(), this);
+		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, WidDispatch::GetInstance(), this);
 	ASSERT(m_hWnd!=NULL);
 	return m_hWnd;
 }

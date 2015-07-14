@@ -45,7 +45,8 @@ DECLARE_HANDLE	(HWID);
 #define ASSERT(expr) _ASSERT(expr)
 #endif
 
-#define SharedPtr std::tr1::shared_ptr
+#define SharedPtr  std::tr1::shared_ptr
+#define WeakPtr	   std::tr1::weak_ptr
 
 #ifdef _DEBUG
 #ifndef TRACE
@@ -91,9 +92,9 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define WID_STATE_PUSH		2
 #define WID_STATE_CHECKED	3
 
-// State Color
-#define WID_BKGND_STATIC	RGB(238, 238, 238)
-#define WID_BKGND_MOUSE		RGB(228, 240, 246)
+// Widget State Color
+#define WID_BKGND_STATIC	RGB(0, 0, 0)
+#define WID_BKGND_MOUSE		RGB(60, 60, 60)
 #define WID_BKGND_PUSH		RGB(179, 224, 249)
 #define WID_BKGND_CHECKED	RGB(201, 234, 252)
 
@@ -117,11 +118,21 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define WID_FSIZE_PUSH		10
 #define WID_FSIZE_CHECKED	10
 
+#define WBTN_BKGND_STATIC	RGB(30, 30, 30)
+#define WBTN_BKGND_MOUSE	RGB(40, 40, 40)
+#define WBTN_BKGND_PUSH		WBTN_BKGND_MOUSE
+#define WBTN_BKGND_CHECKED	RGB(60, 60, 60)
+
+#define WBTN_FRAME_STATIC	RGB(45, 45, 45)
+#define WBTN_FRAME_MOUSE	RGB(75, 75, 75)
+#define WBTN_FRAME_PUSH		WBTN_FRAME_MOUSE
+#define WBTN_FRAME_CHECKED	WBTN_FRAME_STATIC
+
 // check box color
-#define WID_CKB_BKGND		RGB(244, 244, 244)
-#define WID_CKB_FRAMEO		RGB(142, 143, 143)
-#define WID_CKB_FRAMEI		RGB(202, 207, 212)
-#define WID_CKB_CHECK		RGB(49, 52, 124)
+#define WCKB_BKGND_STATIC	RGB(244, 244, 244)
+#define WCKB_BKGND_MOUSE	RGB(142, 143, 143)
+#define WCKB_BKGND_PUSH		RGB(202, 207, 212)
+#define WCKB_BKGND_CHECKED	RGB(49, 52, 124)
 // check box size
 #define WID_CKB_MARGIN		1
 #define WID_CKB_SIZE		13
@@ -136,6 +147,22 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 
 // ListCtrl
 #define WID_LC_HEAD_HEIGHT	20
+
+#define WCELL_BKGRND		WID_BKGND_STATIC
+#define WCELL_FRAME			WID_FRAME_STATIC
+#define WCELL_SELECTED		RGB(255, 255, 255)
+
+// Cell State
+#define WCS_NORMAL			0x00000000
+#define WCS_SELECTED		0x00000001
+#define WCS_ASORT			0x00000010
+#define WCS_NASORT			0x00000100
+
+enum Wfx_Msg
+{
+	WFXM_FIRST = WM_USER + 500,
+	WFXM_LC_HITCOL
+};
 
 #define WFX_BEGIN_MSG_MAP(theClass)\
 	public:\

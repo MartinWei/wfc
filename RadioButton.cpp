@@ -11,37 +11,38 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
-#include "wfxgdi.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
-void RadioButtonItem::OnDraw( Gdiplus::Graphics& grph )
+void RadioButtonItem::OnDraw( HDC hdc, const RECT& rcPaint )
 {
 	SharedPtr<Gdiplus::Image> pImage = GetImage();
 	if (pImage != NULL)
 	{
 		return;
 	}
-	DrawRadioButtonItem(this, grph);
+	//DrawRadioButtonItem(this, grph);
 }
 
 BOOL RadioButtonItem::DrawRadioButtonItem( Widget* pWid, Gdiplus::Graphics& grph )
 {
-	Button* pButton = dynamic_cast<Button*>(pWid);
+	return FALSE;
+	/*Button* pButton = dynamic_cast<Button*>(pWid);
 	if (pButton == NULL)
 	{
 		return FALSE;
 	}
 
 	BOOL bChecked = pButton->IsCheck();
-	Gdiplus::RectF rc;
-	pButton->GetRect(rc);
-	Gdiplus::RectF rcIn = rc;
+	RECT rc;
+	;
+	RECT rcIn = rc;
 	rcIn.X += 2 * WID_CKB_MARGIN;
 	rcIn.Y += 2 * WID_CKB_MARGIN;
 	rcIn.Width -= 4 * WID_CKB_MARGIN;
 	rcIn.Height -= 4 * WID_CKB_MARGIN;
-	Gdiplus::RectF rcCheck = rcIn;
+	RECT rcCheck = rcIn;
 	rcCheck.X += WID_CKB_MARGIN;
 	rcCheck.Y += WID_CKB_MARGIN;
 	rcCheck.Width -= 2 * WID_CKB_MARGIN;
@@ -71,7 +72,7 @@ BOOL RadioButtonItem::DrawRadioButtonItem( Widget* pWid, Gdiplus::Graphics& grph
 		grph.FillPath(&brsh, &path);
 	}
 
-	return TRUE;
+	return TRUE;*/
 }
 
 RadioButton::RadioButton()

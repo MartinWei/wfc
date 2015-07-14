@@ -8,9 +8,27 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
+
 #pragma once
 
 #include "wfx.h"
-#include "wfxwid.h"
-#include "wfxrender.h"
-#include "wfxcmn.h"
+
+BEGIN_NAMESPACE_WFX
+
+class WidgetBase;
+
+class WFX_API App : public WidgetBase
+{
+public:
+	App(HINSTANCE hInstance, Frame* pFrame = NULL);
+	virtual ~App();
+public:
+	virtual BOOL LoadFrame(Frame* pFrame);
+public:
+	virtual BOOL run();
+protected:
+	HINSTANCE m_hInstance;
+	Frame* m_pFrame;
+};
+
+END_NAMESPACE_WFX

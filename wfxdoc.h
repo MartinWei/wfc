@@ -17,6 +17,7 @@ BEGIN_NAMESPACE_WFX
 
 class WidgetBase;
 class View;
+class Frame;
 
 class WFX_API Document : public WidgetBase
 {
@@ -25,16 +26,23 @@ public:
 	virtual BOOL Close() = 0;
 };
 
-class WFX_API DocumentFactory
+template<class T>
+class Factory
 {
 public:
-	virtual Document* CreateDocument() = 0;
+	virtual T* CreateObject()
+	{
+		return new T();
+	}
 };
+
 
 class WFX_API DocumentMgr : public WidgetBase
 {
 public:
-	virtual int AddDoc(DocumentFactory* pFactory);
+	virtual int AddDoc(Factory<Document>* pDocFactory,
+		Factory<Frame>* pFrameFactory, 
+		Factory<View>* pViewFactory);
 	virtual Document* Next();
 	virtual Document* Pre();
 	virtual Document* GetAt(int i);

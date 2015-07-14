@@ -11,7 +11,7 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
-#include "wfxgdi.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
@@ -28,12 +28,13 @@ Button::~Button()
 
 }
 
-void Button::OnDraw( Gdiplus::Graphics& grph )
+void Button::OnDraw( HDC hdc, const RECT& rcPaint )
 {
 	SharedPtr<Gdiplus::Image> pImage = GetImageFromState();
 	if (pImage == NULL)
 	{
-		return RoundWid::OnDraw(grph);
+		RECT rc = GetRect();
+		WfxRender::DrawButtton(hdc, GetText(), rc, GetState(), m_pDispatch);
 	}
 
 }
@@ -72,9 +73,9 @@ LRESULT Button::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 {
 	if (m_bCheckState && m_bChecked)
 	{
-		m_clrText.SetFromCOLORREF(WID_TEXT_CHECKED);
-		m_clrBkgnd.SetFromCOLORREF(WID_BKGND_CHECKED);
-		m_clrFrame.SetFromCOLORREF(WID_FRAME_CHECKED);
+		m_clrText = (WID_TEXT_CHECKED);
+		m_clrBkgnd = (WID_BKGND_CHECKED);
+		m_clrFrame = (WID_FRAME_CHECKED);
 		InvalidWid();
 		return 0;
 	}

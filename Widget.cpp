@@ -10,7 +10,7 @@
 //
 #include "StdAfx.h"
 #include "wfxwid.h"
-#include "wfxgdi.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
@@ -25,8 +25,11 @@ Widget::Widget(void)
 , m_strText(WID_DEFAULT_TEXT)
 , m_uBarFlag(WESB_NONE)
 , m_wShow(SW_SHOW)
+, m_clrBkgnd(WID_BKGND_STATIC)
+, m_clrFrame(WID_FRAME_STATIC)
+, m_clrText(WID_TEXT_STATIC)
 {
-	InitFont();
+	m_pFont.reset(new LOGFONTW);
 }
 
 Widget::~Widget(void)
@@ -39,29 +42,29 @@ Widget::~Widget(void)
 	TDEL(m_pHScrollbar);
 }
 
-void Widget::GetRect( Gdiplus::RectF& rc ) const 
+RECT Widget::GetRect() const 
 {
-	rc = m_rc;
+	return m_rc;
 }
 
-void Widget::GetWidRect( Gdiplus::RectF& rc )
+RECT Widget::GetWidRect() const
 {
-	rc = m_rcWid;
+	return m_rcWid;
 }
 
-void Widget::SetWidRect( const Gdiplus::RectF& rc )
+void Widget::SetWidRect( const RECT& rc )
 {
 	m_rcWid = rc;
 	SetRect(rc);
 	m_pDispatch->SetWidRect(this, rc);
 }
 
-void Widget::SetRect( const Gdiplus::RectF& rc )
+void Widget::SetRect( const RECT& rc )
 {
 	m_rc = rc;
 }
 
-BOOL Widget::Create( const Gdiplus::RectF& rc, WfxDispatch* pDispatch, 
+BOOL Widget::Create( const RECT& rc, WidDispatch* pDispatch, 
 					Widget* pParent /*= NULL*/, BOOL bNC /*= FALSE*/ )
 {
 	ASSERT(pDispatch != NULL);
@@ -104,20 +107,12 @@ BOOL Widget::HasChild() const
 void Widget::InvalidWid()
 {
 	ASSERT(m_pDispatch != NULL);
-	m_pDispatch->DrawWid(this);
+	m_pDispatch->Invalidate(GetRect());
 }
 
-void Widget::OnDraw( Gdiplus::Graphics& grph )
+void Widget::OnDraw( HDC hdc, const RECT& rcPaint )
 {
-	Gdiplus::RectF rc;
-	GetRect(rc);
-	Gdiplus::SolidBrush brsh(m_clrBkgnd);
-	grph.FillRectangle(&brsh, rc.X, rc.Y, rc.Width, rc.Height);
-	Gdiplus::Pen pn(m_clrFrame);
-	grph.DrawRectangle(&pn, rc);
-	brsh.SetColor(m_clrText);
-	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
-		rc, m_pFormat.get(), &brsh);
+	WfxRender::DrawWidget(hdc, m_strText, m_rc, m_wState, m_pDispatch);
 }
 
 void Widget::SetHwid( HWID hWid )
@@ -195,46 +190,6 @@ std::wstring Widget::GetText() const
 	return m_strText;
 }
 
-void Widget::SetFormat( const SharedPtr<Gdiplus::StringFormat>& pFormat )
-{
-	m_pFormat = pFormat;
-}
-
-const SharedPtr<Gdiplus::StringFormat> Widget::GetFormat() const
-{
-	return m_pFormat;
-}
-
-void Widget::SetFont( const SharedPtr<Gdiplus::Font>& pFont )
-{
-	m_pFont = pFont;
-}
-
-const SharedPtr<Gdiplus::Font> Widget::GetFont() const
-{
-	return m_pFont;
-}
-
-void Widget::SetBkgnd( const Gdiplus::Color& clrBkgnd )
-{
-	m_clrBkgnd = clrBkgnd;
-}
-
-Gdiplus::Color Widget::GetBkgnd() const
-{
-	return m_clrBkgnd;
-}
-
-void Widget::SetFrameClr( const Gdiplus::Color& clrFrame )
-{
-	m_clrFrame = clrFrame;
-}
-
-Gdiplus::Color Widget::GetFrameClr() const
-{
-	return m_clrFrame;
-}
-
 void Widget::SetState( WORD wState )
 {
 	if (wState == m_wState)
@@ -252,26 +207,8 @@ WORD Widget::GetState() const
 	return m_wState;
 }
 
-void Widget::SetTextClr( const Gdiplus::Color& clrText )
-{
-	m_clrText = clrText;
-}
-
-Gdiplus::Color Widget::GetTextColor() const
-{
-	return m_clrText;
-}
-
 void Widget::InitFont()
 {
-	m_pFormat.reset(new Gdiplus::StringFormat);
-	m_pFormat->SetAlignment(Gdiplus::StringAlignmentCenter);
-	m_pFormat->SetLineAlignment(Gdiplus::StringAlignmentCenter);
-	m_pFont.reset(new Gdiplus::Font(WID_FONT_STATIC, 
-		WID_FSIZE_STATIC));
-	m_clrBkgnd.SetFromCOLORREF(WID_BKGND_STATIC);
-	m_clrFrame.SetFromCOLORREF(WID_FRAME_STATIC);
-	m_clrText.SetFromCOLORREF(WID_TEXT_STATIC);
 }
 
 void Widget::ShowWid( WORD wShow )
@@ -340,30 +277,22 @@ LRESULT Widget::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	{
 	case WID_STATE_MOUSE:
 		{
-			m_clrText.SetFromCOLORREF(WID_TEXT_MOUSE);
-			m_clrBkgnd.SetFromCOLORREF(WID_BKGND_MOUSE);
-			m_clrFrame.SetFromCOLORREF(WID_FRAME_MOUSE);
+		
 		}
 		break;
 	case WID_STATE_STATIC:
 		{
-			m_clrText.SetFromCOLORREF(WID_TEXT_STATIC);
-			m_clrBkgnd.SetFromCOLORREF(WID_BKGND_STATIC);
-			m_clrFrame.SetFromCOLORREF(WID_FRAME_STATIC);
+			
 		}
 		break;
 	case WID_STATE_PUSH:
 		{
-			m_clrText.SetFromCOLORREF(WID_TEXT_PUSH);
-			m_clrBkgnd.SetFromCOLORREF(WID_BKGND_PUSH);
-			m_clrFrame.SetFromCOLORREF(WID_FRAME_PUSH);
+			
 		}
 		break;
 	default:
 		{
-			m_clrText.SetFromCOLORREF(WID_TEXT_STATIC);
-			m_clrBkgnd.SetFromCOLORREF(WID_BKGND_STATIC);
-			m_clrFrame.SetFromCOLORREF(WID_FRAME_STATIC);
+			
 		}
 	}
 	InvalidWid();
@@ -385,16 +314,6 @@ void Widget::ReleaseCapture()
 {
 	ASSERT(m_pDispatch != NULL);
 	m_pDispatch->ReleaseCapture();
-}
-
-Gdiplus::SizeF Widget::GetVirtualSize() const
-{
-	return m_szVirtual;
-}
-
-void Widget::SetVirtualSize( const Gdiplus::SizeF& sz )
-{
-	m_szVirtual = sz;
 }
 
 ScrollBar* Widget::GetScrollBar( int nBar ) const
@@ -538,7 +457,7 @@ LRESULT ScrollBar::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	ASSERT(m_pArrow1 != NULL);
 	ASSERT(m_pArrow2 != NULL);
 	ASSERT(m_pSlider != NULL);
-	Gdiplus::RectF rc;
+	RECT rc = {0};
 	m_pArrow1->Create(rc, m_pDispatch, this);
 	m_pArrow2->Create(rc, m_pDispatch, this);
 	m_pSlider->Create(rc, m_pDispatch, this);
@@ -547,52 +466,52 @@ LRESULT ScrollBar::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Gdiplus::RectF rcWid;
-	GetRect(rcWid);
-	Gdiplus::RectF rc = rcWid;
-	rc.X += m_nSAMargin;
+	RECT rcWid = {0};
+	rcWid = GetRect();
+	RECT rc = rcWid;
+	rc.left += m_nSAMargin;
 
 	if (SB_VERT == m_nBar)
 	{
-		rc.Width -= m_nSAMargin;
-		rc.Height = m_nArrorSize;
+		rc.right -= m_nSAMargin;
+		rc.bottom = m_nArrorSize;
 	}
 	else
 	{
-		rc.Width = m_nArrorSize;
-		rc.Height -= m_nSAMargin;
+		rc.right = m_nArrorSize;
+		rc.bottom -= m_nSAMargin;
 	}
 
-	rc.Y += m_nSAMargin;
+	rc.top += m_nSAMargin;
 
-	Gdiplus::RectF rcArrow1 = rc;
+	RECT rcArrow1 = rc;
 	m_pArrow1->SetWidRect(rcArrow1);
 
 	rc = rcWid;
 
 	if (SB_VERT == m_nBar)
 	{
-		rc.X += m_nSAMargin;
-		rc.Width -= m_nSAMargin;
-		rc.Height = m_nArrorSize;
-		rc.Y = rcWid.Y + rcWid.Height - m_nArrorSize - m_nSAMargin;
+		rc.left += m_nSAMargin;
+		rc.right -= m_nSAMargin;
+		rc.bottom = m_nArrorSize;
+		rc.top = rcWid.top + rcWid.bottom - m_nArrorSize - m_nSAMargin;
 	}
 	else
 	{
-		rc.X = rcWid.X + rcWid.Width - m_nArrorSize - m_nSAMargin;
-		rc.Width = m_nArrorSize;
-		rc.Height -= m_nSAMargin;
-		rc.Y += m_nSAMargin;
+		rc.left = rcWid.left + rcWid.left - m_nArrorSize - m_nSAMargin;
+		rc.right = m_nArrorSize;
+		rc.bottom -= m_nSAMargin;
+		rc.top += m_nSAMargin;
 	}
 
-	Gdiplus::RectF rcArrow2 = rc;
+	RECT rcArrow2 = rc;
 	m_pArrow2->SetWidRect(rcArrow2);
 
 	rc = rcWid;
 
 	float fSliderSize = GetSliderSize();
 	float fPos = 0.0;
-	float fTotal = m_nBar == SB_VERT? rcWid.Height : rcWid.Width;//m_pScrollInfo->nMax - m_pScrollInfo->nMin;
+	float fTotal = m_nBar == SB_VERT? rcWid.bottom - rcWid.top : rcWid.right - rcWid.left;//m_pScrollInfo->nMax - m_pScrollInfo->nMin;
 	if (fTotal > 0.00)
 	{
 		fPos = m_pScrollInfo->nPos / fTotal * fTotal;
@@ -604,43 +523,43 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 	if (SB_VERT == m_nBar)
 	{
-		rc.X += m_nSAMargin;
-		rc.Width -= m_nSAMargin;
-		rc.Y += fPos + m_nArrorSize + m_nSAMargin;
-		rc.Height = fSliderSize;
+		rc.left += m_nSAMargin;
+		rc.right -= m_nSAMargin;
+		rc.top += fPos + m_nArrorSize + m_nSAMargin;
+		rc.bottom = fSliderSize;
 	}
 	else
 	{
-		rc.X += fPos + m_nArrorSize + m_nSAMargin;
-		rc.Width = fSliderSize;
-		rc.Y += m_nSAMargin;
-		rc.Height -= m_nSAMargin;
+		rc.left += fPos + m_nArrorSize + m_nSAMargin;
+		rc.right = fSliderSize;
+		rc.top += m_nSAMargin;
+		rc.bottom -= m_nSAMargin;
 	}
 
 	if (SB_VERT == m_nBar)
 	{
-		if (rc.Y < rcArrow1.Y + m_nArrorSize + m_nSAMargin)
+		if (rc.top < rcArrow1.top + m_nArrorSize + m_nSAMargin)
 		{
-			rc.Y = rcArrow1.Y + rcArrow1.Height + m_nSAMargin;
-			rc.Height = fSliderSize;
+			rc.top = rcArrow1.top + (rcArrow1.bottom - rcArrow1.top) + m_nSAMargin;
+			rc.bottom = rc.top + fSliderSize;
 		}
-		if (rc.Y + rc.Height > rcArrow2.Y - m_nSAMargin)
+		if (rc.bottom > rcArrow2.top - m_nSAMargin)
 		{
-			rc.Height = fSliderSize;
-			rc.Y = rcArrow2.Y - m_nSAMargin - fSliderSize;
+			rc.top = rcArrow2.top - m_nSAMargin - fSliderSize;
+			rc.bottom = rc.top + fSliderSize;
 		}
 	}
 	else
 	{
-		if (rc.X < rcArrow1.X + m_nArrorSize + m_nSAMargin)
+		if (rc.left < rcArrow1.left + m_nArrorSize + m_nSAMargin)
 		{
-			rc.X = rcArrow1.X + rcArrow1.Width + m_nSAMargin;
-			rc.Width = fSliderSize;
+			rc.left = rcArrow1.right + m_nSAMargin;
+			rc.right = rc.left + fSliderSize;
 		}
-		if (rc.X + rc.Width > rcArrow2.X - m_nSAMargin)
+		if (rc.right > rcArrow2.top - m_nSAMargin)
 		{
-			rc.Width = fSliderSize;
-			rc.X = rcArrow2.X - m_nSAMargin - fSliderSize;
+			rc.left = rcArrow2.left - m_nSAMargin - fSliderSize;
+			rc.right = rc.left + fSliderSize;
 		}
 	}
 
@@ -663,27 +582,28 @@ float ScrollBar::GetSliderSize() const
 		return 0.00;
 	}
 
-	Gdiplus::RectF rcWid;
-	GetRect(rcWid);
+	RECT rcWid = {0};
+	rcWid = GetRect();
 
 	float fsildersize = 0.0;
 	float fslidersizeMax = 0.0;
 
 	float farrowsize = 2 * m_nArrorSize;
-	Gdiplus::SizeF sz = GetParent()->GetVirtualSize();
+	//Gdiplus::SizeF sz = GetParent()->GetVirtualSize();
+	SIZE sz = {0};
 	if (SB_VERT == m_nBar)
 	{
-		fslidersizeMax = rcWid.Height - farrowsize;
-		if (sz.Height > 0.00)
-			fsildersize = fslidersizeMax - (fslidersizeMax * rcWid.Height / sz.Height);
+		fslidersizeMax = rcWid.bottom - rcWid.top - farrowsize;
+		if (sz.cy > 0.00)
+			fsildersize = fslidersizeMax - (fslidersizeMax * (rcWid.bottom - rcWid.top) / sz.cy);
 		else
 			fsildersize = 0.0;
 	}
 	else
 	{
-		fslidersizeMax = rcWid.Width - farrowsize;
-		if (sz.Width > 0.00)
-			fsildersize = fslidersizeMax - (fslidersizeMax * rcWid.Width / sz.Width);
+		fslidersizeMax = rcWid.right - rcWid.left - farrowsize;
+		if (sz.cx > 0.00)
+			fsildersize = fslidersizeMax - (fslidersizeMax * (rcWid.right - rcWid.left) / sz.cx);
 		else
 			fsildersize = 0.0;
 	}
@@ -695,8 +615,7 @@ float ScrollBar::GetSliderSize() const
 void ScrollBar::SetPos( int nPos )
 {
 	ASSERT(m_pScrollInfo != NULL);
-	Gdiplus::RectF rcWid;
-	GetRect(rcWid);
+	RECT rcWid = GetRect();
 	if (m_pScrollInfo->nPos != nPos)
 	{
 		m_pScrollInfo->nPos = nPos;
@@ -704,13 +623,13 @@ void ScrollBar::SetPos( int nPos )
 			m_pScrollInfo->nPos = 0;
 		if (SB_VERT == m_nBar)
 		{
-			if (m_pScrollInfo->nPos > rcWid.Height)
-				m_pScrollInfo->nPos = rcWid.Height;
+			if (m_pScrollInfo->nPos > rcWid.bottom - rcWid.top)
+				m_pScrollInfo->nPos = rcWid.bottom - rcWid.top;
 		}
 		else
 		{
-			if (m_pScrollInfo->nPos > rcWid.Width)
-				m_pScrollInfo->nPos = rcWid.Width;
+			if (m_pScrollInfo->nPos > rcWid.right - rcWid.left)
+				m_pScrollInfo->nPos = rcWid.right - rcWid.left;
 		}
 		SendWidMessage(WM_SIZE);
 		InvalidWid();
@@ -723,9 +642,9 @@ int ScrollBar::GetPos() const
 	return m_pScrollInfo->nPos;
 }
 
-SharedPtr<WfxDispatch> LayoutBase::Parse( const std::wstring& strXml )
+SharedPtr<WidDispatch> LayoutBase::Parse( const std::wstring& strXml )
 {
-	SharedPtr<WfxDispatch> p;
+	SharedPtr<WidDispatch> p;
 	return p;
 }
 
@@ -764,19 +683,18 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	POINT pt = {0};
 	pt.x = GET_X_LPARAM(lParam);
 	pt.y = GET_Y_LPARAM(lParam);
-	Gdiplus::RectF rc;
-	GetParent()->GetRect(rc);
+	RECT rc = GetParent()->GetRect();
 	if (m_bLButtonDown)
 	{
 		if (SB_VERT == m_nBar)
 		{
-			if (pt.y < rc.Y || pt.y > rc.Y + rc.Height)
+			if (pt.y < rc.top || pt.y > rc.bottom)
 				return 0;
 			nOffset = pt.y - m_ptLButtonDown.y;
 		}
 		else
 		{
-			if (pt.x < rc.X || pt.x > rc.X + rc.Width)
+			if (pt.x < rc.left || pt.x > rc.right)
 				return 0;
 			nOffset = pt.x - m_ptLButtonDown.x;
 		}
@@ -794,7 +712,12 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	return 0;
 }
 
-Timer::Timer( WfxDispatch* pDispatch )
+void Slider::OnDraw( HDC hdc, const RECT& rcPaint )
+{
+	WfxRender::DrawSlider(hdc, GetRect(), GetState(), m_pDispatch);
+}
+
+Timer::Timer( WidDispatch* pDispatch )
 : m_pDispatch(pDispatch)
 {
 
@@ -857,23 +780,23 @@ RoundWid::~RoundWid()
 
 LRESULT RoundWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Gdiplus::RectF rc;
-	GetRect(rc);
-	CommonDraw::GetRoundRect(rc, *m_pGrphPath);
+	RECT rc;
+	rc = GetRect();
+	WfxRender::GetRoundRect(rc, *m_pGrphPath);
 	return Widget::OnSize(uMsg, wParam, lParam, bHandled);
 }
 
-void RoundWid::OnDraw( Gdiplus::Graphics& grph )
+void RoundWid::OnDraw( HDC hdc, const RECT& rcPaint )
 {
-	Gdiplus::RectF rc;
-	GetRect(rc);
+	/*RECT rc;
+	rc = GetRect();
 	Gdiplus::SolidBrush brsh(m_clrBkgnd);
 	grph.FillPath(&brsh, m_pGrphPath.get());
 	Gdiplus::Pen pn(m_clrFrame);
 	grph.DrawPath(&pn, m_pGrphPath.get());
-	brsh.SetColor(m_clrText);
-	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
-		rc, m_pFormat.get(), &brsh);
+	brsh.SetColor(m_clrText);*/
+	/*grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
+		rc, m_pFormat.get(), &brsh);*/
 }
 
 ImageWid::ImageWid()

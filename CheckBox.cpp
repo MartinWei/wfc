@@ -11,7 +11,7 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
-#include "wfxgdi.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
@@ -34,67 +34,20 @@ CheckBoxItem::~CheckBoxItem()
 
 }
 
-void CheckBoxItem::OnDraw( Gdiplus::Graphics& grph )
+void CheckBoxItem::OnDraw( HDC hdc, const RECT& rcPaint )
 {
 	SharedPtr<Gdiplus::Image> pImage = GetImage();
 	if (pImage != NULL)
 	{
 		return;
 	}
-	DrawCheckBoxItem(this, grph);
+	RECT rc = GetRect();
+	WfxRender::DrawCheckBox(hdc, rc, GetState(), m_pDispatch);
 }
 
 SharedPtr<Gdiplus::Image> CheckBoxItem::GetImage() const
 {
 	return m_bChecked? m_pImageChecked : m_pImageUnCheck;
-}
-
-BOOL CheckBoxItem::DrawCheckBoxItem( Widget* pWid, Gdiplus::Graphics& grph )
-{
-	Button* pButton = dynamic_cast<Button*>(pWid);
-	if (pButton == NULL)
-	{
-		return FALSE;
-	}
-
-	BOOL bChecked = pButton->IsCheck();
-	Gdiplus::RectF rc;
-	pButton->GetRect(rc);
-	Gdiplus::RectF rcIn = rc;
-	rcIn.X += 2 * WID_CKB_MARGIN;
-	rcIn.Y += 2 * WID_CKB_MARGIN;
-	rcIn.Width -= 4 * WID_CKB_MARGIN;
-	rcIn.Height -= 4 * WID_CKB_MARGIN;
-	Gdiplus::Color clr;
-	clr.SetFromCOLORREF(WID_CKB_BKGND);
-	Gdiplus::SolidBrush brsh(clr);
-	grph.FillRectangle(&brsh, rc);
-
-	clr.SetFromCOLORREF(WID_CKB_FRAMEO);
-	Gdiplus::Pen pn(clr);
-	grph.DrawRectangle(&pn, rc);
-
-	clr.SetFromCOLORREF(WID_CKB_FRAMEI);
-	pn.SetColor(clr);
-	grph.DrawRectangle(&pn, rcIn);
-
-	if (bChecked)
-	{
-		Gdiplus::PointF pts[3] = {
-			Gdiplus::PointF(rcIn.X,
-			rcIn.Y + rcIn.Height/2)
-			, Gdiplus::PointF(rcIn.X + rcIn.Width/3,
-			rcIn.Y + rcIn.Height - WID_CKB_MARGIN)
-			, Gdiplus::PointF(rcIn.X + rcIn.Width,
-			rcIn.Y)
-		};
-		clr.SetFromCOLORREF(WID_CKB_CHECK);
-		pn.SetColor(clr);
-		pn.SetWidth(2);
-		grph.DrawLines(&pn, pts, 3);
-	}
-
-	return TRUE;
 }
 
 CheckBox::CheckBox()
@@ -106,27 +59,26 @@ CheckBox::CheckBox()
 
 LRESULT CheckBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Gdiplus::RectF rc;
+	RECT rc;
 	m_pItem->Create(rc, m_pDispatch, this);
 	return 0;
 }
 
 LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	Gdiplus::RectF rc;
-	GetRect(rc);
-	rc.Width = WID_CKB_SIZE;
-	rc.X += 2;
-	rc.Y = rc.Y + (rc.Height - WID_CKB_SIZE) / 2;
-	rc.Height = WID_CKB_SIZE;
+	RECT rc = GetRect();
+	rc.right = rc.left + WID_CKB_SIZE;
+	rc.left += 2;
+	rc.top = rc.top + (rc.bottom - rc.top - WID_CKB_SIZE) / 2;
+	rc.bottom = rc.top + WID_CKB_SIZE;
 	m_pItem->SetWidRect(rc);
 	m_lOffset = WID_CKB_SIZE + 5;
 	return 0;
 }
 
-void CheckBox::OnDraw( Gdiplus::Graphics& grph )
+void CheckBox::OnDraw( HDC hdc, const RECT& rcPaint )
 {
-	Gdiplus::RectF rc;
+	/*RECT rc;
 	GetRect(rc);
 	Gdiplus::SolidBrush brsh(m_clrBkgnd);
 	grph.FillRectangle(&brsh, rc.X, rc.Y, rc.Width, rc.Height);
@@ -136,5 +88,5 @@ void CheckBox::OnDraw( Gdiplus::Graphics& grph )
 	rc.X += m_lOffset;
 	rc.Width -= m_lOffset;
 	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
-		rc, m_pFormat.get(), &brsh);
+		rc, m_pFormat.get(), &brsh);*/
 }

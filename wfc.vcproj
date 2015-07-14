@@ -231,7 +231,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfxgdi.cpp"
+				RelativePath=".\wfxrender.cpp"
 				>
 			</File>
 			<File
@@ -261,11 +261,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wfxapp.h"
+				>
+			</File>
+			<File
 				RelativePath=".\wfxcmn.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxgdi.h"
+				RelativePath=".\wfxdoc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxframe.h"
 				>
 			</File>
 			<File
@@ -274,6 +282,14 @@
 			</File>
 			<File
 				RelativePath=".\wfxlib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxrender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxview.h"
 				>
 			</File>
 			<File

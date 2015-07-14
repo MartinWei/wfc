@@ -11,7 +11,7 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
-#include "wfxgdi.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
@@ -30,9 +30,8 @@ HWND ComboWnd::CreateInPlaceWindow()
 	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
 	ASSERT(pComboBox != NULL);
 	ASSERT(pComboBox->m_pDispatch != NULL);
-	Gdiplus::RectF rcWid;
-	pComboBox->GetRect(rcWid);
-	RECT rc = WfxDispatch::FromRect(rcWid);
+	RECT rcWid = pComboBox->GetRect();
+	RECT rc = rcWid;
 	rc.top = rc.bottom;
 	rc.bottom = rc.top + pComboBox->GetSize() * pComboBox->GetItemHeight(0);
 	MapWindowRect(pComboBox->m_pDispatch->GetHwnd(), HWND_DESKTOP, &rc);
@@ -55,7 +54,7 @@ LRESULT ComboWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
 	ASSERT(pComboBox != NULL);
 	ASSERT(pComboBox->m_pDispatch != NULL);
-	Gdiplus::RectF rc;
+	RECT rc;
 	m_pRoot->Create(rc, m_pDispatch.get());
 	ULONG lItems = pComboBox->GetSize();
 	Widget* pChild = NULL;
@@ -79,19 +78,15 @@ LRESULT ComboWnd::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 	ASSERT(pComboBox->m_pDispatch != NULL);
 	RECT rc = {0};
 	GetClientRect(rc);
-	Gdiplus::RectF rcWid;
-	rcWid.X = rc.left;
-	rcWid.Y = rc.top;
-	rcWid.Width = rc.right - rc.left;
-	rcWid.Height = rc.bottom - rc.top;
+	RECT rcWid = rc;
 	ASSERT(m_pRoot != NULL);
 	m_pRoot->SetWidRect(rcWid);
-	rcWid.Height = 30;
+	rcWid.bottom = rcWid.top + 30;
 	ULONG lItems = pComboBox->GetSize();
 	for (ULONG i = 0; i < lItems; i++)
 	{
 		m_rgpItems[i]->SetWidRect(rcWid);
-		rcWid.Y += rcWid.Height;
+		rcWid.top += rcWid.bottom - rcWid.top;
 	}
 	
 	return 0;

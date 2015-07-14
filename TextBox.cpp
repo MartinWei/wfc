@@ -19,9 +19,8 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 	TextBox* pTextBox = dynamic_cast<TextBox*>(m_pOwner);
 	ASSERT(pTextBox != NULL);
 	ASSERT(pTextBox->m_pDispatch != NULL);
-	Gdiplus::RectF rcWid;
-	pTextBox->GetRect(rcWid);
-	RECT rc = WfxDispatch::FromRect(rcWid);
+	RECT rcWid = pTextBox->GetRect();
+	RECT rc = rcWid;
 	::InflateRect(&rc, -1, -1);
 	Create(m_pOwner->m_pDispatch->GetHwnd(),
 		NULL, WS_CHILD, ES_AUTOHSCROLL, rc);
