@@ -16,7 +16,7 @@
 #pragma comment(lib, "shlwapi.lib")
 #endif
 
-void __Trace( LPCTSTR pstrFormat, ... )
+void __Trace( const wchar_t* pstrFormat, ... )
 {
 #ifdef _DEBUG
 	WCHAR szBuffer[300] = { 0 };
@@ -25,6 +25,17 @@ void __Trace( LPCTSTR pstrFormat, ... )
 	::wvnsprintf(szBuffer, lengthof(szBuffer) - 2, pstrFormat, args);
 	wcscat_s(szBuffer, 300, L"\n");
 	va_end(args);
-	::OutputDebugString(szBuffer);
+	::OutputDebugStringW(szBuffer);
 #endif
+}
+
+std::wstring StrFormat( const wchar_t* pstrFormat, ... )
+{
+	WCHAR szBuffer[300] = { 0 };
+	va_list args;
+	va_start(args, pstrFormat);
+	::wvnsprintf(szBuffer, lengthof(szBuffer) - 2, pstrFormat, args);
+	wcscat_s(szBuffer, 300, L"\n");
+	va_end(args);
+	return szBuffer;
 }

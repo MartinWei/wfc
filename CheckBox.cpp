@@ -71,7 +71,7 @@ LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 	rc.left += 2;
 	rc.top = rc.top + (rc.bottom - rc.top - WID_CKB_SIZE) / 2;
 	rc.bottom = rc.top + WID_CKB_SIZE;
-	m_pItem->SetWidRect(rc);
+	m_pItem->SetRect(rc);
 	m_lOffset = WID_CKB_SIZE + 5;
 	return 0;
 }

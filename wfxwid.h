@@ -47,6 +47,7 @@ class WFX_API WidgetBase
 public:
 	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID) = 0;
+	LRESULT SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
 
 typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
@@ -74,6 +75,10 @@ public:
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		WFX_MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
+		WFX_MESSAGE_HANDLER(WUM_GET_VIRTUAL_SIZE, OnQueryVirtualSize)
+		WFX_MESSAGE_HANDLER(WUM_GET_VISUAL_SIZE, OnQueryVisualSize)
+		WFX_MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
 	WFX_END_MSG_MAP()
 
 public:
@@ -82,23 +87,17 @@ public:
 	// Position
 public:
 	RECT GetRect() const;
-	RECT GetWidRect() const;
-	void SetWidRect(const RECT& rc);
+	void SetRect(const RECT& rc);
+	RECT GetParentRect() const;
 	void ShowWid(WORD wShow);
 	BOOL IsShow() const;
 	void SetCapture();
 	void ReleaseCapture();
-	virtual void EstimateVirtualSize();
-
-	// Size
-	/*Gdiplus::SizeF GetVirtualSize() const;
-	void SetVirtualSize(const Gdiplus::SizeF& sz);*/
 
 protected:
 	void MyShowWid(WORD wShow);
-
-private:
-	void SetRect(const RECT& rc);
+	RECT GetDrawRect() const;
+	void SetDrawRect(const RECT& rc);
 public:
 	// Generation
 	Widget* GetParent() const;
@@ -145,9 +144,8 @@ public:
 	DrawFunction GetDrawFunction() const;
 	virtual HFONT GetFontObject() const;
 public:
-	BOOL SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
-
+	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	UINT_PTR SetWidTimer(UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
 	BOOL KillWidTimer(UINT_PTR uIDEvent);
 
@@ -172,6 +170,23 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
+	wfx_msg LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnQueryVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSetVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnQueryVisualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnHScroll(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+public:
+	LONG GetVOffset() const;
+	void SetVOffset(LONG nOffset);
+	LONG GetHOffset() const;
+	void SetHOffset(LONG nOffset);
+protected:
+	LONG CalcScrollOffset(int nBar, BOOL bFurther);
 private:
 	WORD m_wState;
 
@@ -192,7 +207,7 @@ protected:
 	DrawFunction m_pDrawFun;
 private:
 	// Position
-	RECT m_rc;
+	RECT m_rcDraw;
 	RECT m_rcWid;
 	BOOL m_bNC;
 	WORD m_wShow;
@@ -205,11 +220,10 @@ private:
 	ScrollBar* m_pHScrollbar;
 	ScrollBar* m_pVScrollbar;
 	UINT m_uBarFlag;
+	LONG m_nHorzPosOffset;
+	LONG m_nVertPosOffset;
 	// Timers
 	std::vector<UINT_PTR> m_rgTimer;
-
-	// Size
-	SIZE m_szVirtual;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -253,6 +267,7 @@ public:
 	WFX_BEGIN_MSG_MAP(ScrollBar)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
+		WFX_MESSAGE_HANDLER(WUM_SB_OFFSET, OnSliderOffset)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
@@ -262,12 +277,19 @@ public:
 	void SetScrollInfo(const SCROLLINFO* pScrollInfo);
 	void SetPos(int nPos);
 	int GetPos() const;
+	int CalcSliderPos(const RECT& rcSlider);
+	RECT CalcSliderRect(const RECT& rcMaxSlider);
+	int GetSliderMax();
+	int GetSliderMin();
+	int GetSlierMid();
 protected:
-	float GetSliderSize() const;
+	float CalcSliderSize();
 public:
 	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnSliderOffset(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 
 protected:
@@ -653,6 +675,7 @@ public:
 	Widget* GetWidPt(const std::vector<Widget*>& rgpWid);
 	Widget* FromHwid(HWID hWid) const;
 	void SetCapture(Widget* pWid);
+	void SetFocus(Widget* pWid);
 	void ReleaseCapture();
 public:
 	void EnableScrollBar(Widget* pWid, UINT uBarFlag, BOOL bEnable = TRUE);
@@ -673,6 +696,7 @@ protected:
 	std::map<HWID, Widget*> m_h2oOrphan;
 	std::pair<HWID, Widget*> m_h2oLastMouseMove;
 	std::pair<HWID, Widget*> m_h2oCaptured;
+	std::pair<HWID, Widget*> m_h2oFocused;
 	SharedPtr<Timer> m_pTimer;
 public:
 	static HWID s_hWidBase;

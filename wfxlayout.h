@@ -15,15 +15,16 @@
 
 BEGIN_NAMESPACE_WFX
 
+class WidgetBase;
 class Widget;
 class Grid;
 
-class WFX_API LayoutAttribtes
+class WFX_API LayoutAttribtes 
 {
 
 };
 
-class WFX_API LayoutBase
+class WFX_API LayoutBase : public WidgetBase
 {
 public:
 	virtual ~LayoutBase() = 0;

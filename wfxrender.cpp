@@ -15,26 +15,42 @@
 
 USING_NAMESPACE_WFX;
 
-WfxRender::MemDC::MemDC( HDC hdc, const RECT& rc )
-: m_hdc(hdc)
-, m_rc(rc)
+WfxRender::MemDC::MemDC( HWND hWnd, const RECT& rcPaint )
+: m_hWnd(hWnd)
+, m_rcPaint(rcPaint)
+, m_hdc(NULL)
+, m_hdcMem(NULL)
+, m_hBitmap(NULL)
+, m_hOldBitmap(NULL)
 {
-	m_hdcMem = ::CreateCompatibleDC(m_hdc);
-	m_lWidth = m_rc.right - m_rc.left;
-	m_lHeight = m_rc.bottom - m_rc.top;
-	m_hBitmap = ::CreateCompatibleBitmap(m_hdc,
-		m_lWidth, m_lHeight);
-	m_hOldBitmap = ::SelectObject(m_hdcMem, m_hBitmap);
-	//::SetWindowOrgEx(m_hdcMem, m_rc.left, m_rc.top, &m_ptOrg);
+	m_hdc = ::GetDC(m_hWnd);
+	if (m_hdc != NULL)
+	{
+		m_hdcMem = ::CreateCompatibleDC(m_hdc);
+		RECT rcClient = {0};
+		::GetClientRect(m_hWnd, &rcClient);
+		m_hBitmap = ::CreateCompatibleBitmap(m_hdc,
+			rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+		if (m_hdcMem != NULL && m_hBitmap != NULL)
+			m_hOldBitmap = ::SelectObject(m_hdcMem, m_hBitmap);
+	}
 }
 
 WfxRender::MemDC::~MemDC()
 {
-	BitBlt(m_hdc, m_rc.left, m_rc.top, m_lWidth, m_lHeight,
-		m_hdcMem, m_rc.left, m_rc.top, SRCCOPY);
-	::SelectObject(m_hdcMem, m_hOldBitmap);
-	DeleteObject(m_hBitmap);
-	DeleteDC(m_hdcMem);
+	if (m_hdc != NULL && m_hdcMem != NULL
+		&& m_hBitmap != NULL)
+	{
+		::BitBlt(m_hdc, m_rcPaint.left, m_rcPaint.top, 
+			m_rcPaint.right - m_rcPaint.left, 
+			m_rcPaint.bottom - m_rcPaint.top,
+			m_hdcMem, m_rcPaint.left, m_rcPaint.top, SRCCOPY);
+		::SelectObject(m_hdcMem, m_hOldBitmap);
+		::DeleteObject(m_hBitmap);
+		::DeleteDC(m_hdcMem);
+		::ReleaseDC(m_hWnd, m_hdc);
+	}
+	
 }
 
 WfxRender::MemDC::operator HDC()
@@ -143,6 +159,7 @@ void WfxRender::DrawRadioBox( HDC hdc, const RECT& rc, WORD wState, WidDispatch*
 void WfxRender::DrawWidget( HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState , WidDispatch* pDispatch)
 {
 	DrawSolidRect(hdc, rc, WID_BKGND_STATIC, pDispatch);
+	DrawText(hdc, rc, strText, RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_CENTER, NULL, pDispatch);
 	DrawFrame(hdc, rc, WID_FRAME_STATIC, pDispatch);
 }
 
@@ -177,7 +194,7 @@ void WfxRender::DrawCheckBox( HDC hdc, const RECT& rc, WORD wState, WidDispatch*
 
 void WfxRender::DrawSlider( HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
 {
-
+	DrawSolidRect(hdc, rc, RGB(60, 60, 60), pDispatch);
 }
 
 void WfxRender::DrawArror( HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
@@ -215,6 +232,27 @@ void WfxRender::DrawHeadCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const
 	WfxRender::DrawSolidRect(hdc, rcPaint, clrBk, NULL);
 	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
 	WfxRender::DrawText(hdc, rcPaint, strDraw, clrText, dwFormat);
+}
+
+SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
+{
+	SIZE sz = {0};
+	sz.cx = rc.right - rc.left;
+	sz.cy = rc.bottom - rc.top;
+	if (pDispatch != NULL)
+	{
+		HWND hWnd = pDispatch->GetHwnd();
+		if (hWnd != NULL && ::IsWindow(hWnd))
+		{
+			HDC hdc = ::GetDC(hWnd);
+			if (hdc != NULL)
+			{
+				::GetTextExtentPoint32(hdc, strText.c_str(), strText.size(), &sz);
+			}
+			::ReleaseDC(hWnd, hdc);
+		}
+	}
+	return sz;
 }
 
 

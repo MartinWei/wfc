@@ -31,19 +31,17 @@ public:
 	class MemDC
 	{
 	public:
-		MemDC(HDC hdc, const RECT& rc);
+		MemDC(HWND hWnd, const RECT& rcPaint);
 		~MemDC();
 	public:
 		operator HDC();
 	private:
 		HDC m_hdc;
 		HDC m_hdcMem;
-		RECT m_rc;
+		RECT m_rcPaint;
 		HBITMAP m_hBitmap;
 		HGDIOBJ m_hOldBitmap;
-		LONG m_lWidth;
-		LONG m_lHeight;
-		POINT m_ptOrg;
+		HWND m_hWnd;
 	};
 
 	class RenderClip
@@ -71,6 +69,7 @@ public:
 	static void GenerateClip(HDC hdc, const RECT& rcItem, RenderClip& clip);
 	static void DrawHeadCell(HDC hdc, const RECT& rcPaint,  DWORD dwState,
 		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+	static SIZE EstimateWidgetSize(const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch = NULL);
 };
 
 

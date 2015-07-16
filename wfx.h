@@ -22,6 +22,8 @@
 #define USING_NAMESPACE_WFX	//using namespace wfx
 
 #include <xstring>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -59,7 +61,7 @@ DECLARE_HANDLE	(HWID);
 
 #define lengthof(x) (sizeof(x)/sizeof(*x))
 
-void WFX_API __Trace(LPCTSTR pstrFormat, ...);
+void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 
 #ifndef TDEL
 #define TDEL(p) if ((p) != NULL) { delete (p); (p) = NULL; }
@@ -85,7 +87,7 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 #define WESB_BOTH   (WESB_VERT | WESB_HORZ)
 
 
-#define WID_DEFAULT_TEXT	L"WFX Widget"
+#define WID_DEFAULT_TEXT	L""
 // State
 #define WID_STATE_STATIC	0
 #define WID_STATE_MOUSE		1
@@ -160,8 +162,15 @@ void WFX_API __Trace(LPCTSTR pstrFormat, ...);
 
 enum Wfx_Msg
 {
-	WFXM_FIRST = WM_USER + 500,
-	WFXM_LC_HITCOL
+	WUM_BEGIN = WM_USER + 500,
+	WUM_SET_HOFFSET,
+	WUM_SET_VOFFSET,
+	WUM_GET_VIRTUAL_SIZE,
+	WUM_GET_VISUAL_SIZE,
+	WUM_SB_OFFSET,
+	WUM_LC_HITCOL,
+	WUM_LC_HEADSIZE,
+	WUM_END
 };
 
 #define WFX_BEGIN_MSG_MAP(theClass)\
@@ -209,6 +218,12 @@ enum Wfx_Msg
 
 #define __end_mem_draw }
 
+BEGIN_NAMESPACE_WFX
+
 typedef SharedPtr<Gdiplus::Image>			WfxImagePtr;
 typedef SharedPtr<Gdiplus::StringFormat>	WfxFormatPtr;
 typedef SharedPtr<Gdiplus::Font>			WfxFontPtr;
+
+WFX_API std::wstring StrFormat(const wchar_t* pstrFormat, ...);
+
+END_NAMESPACE_WFX

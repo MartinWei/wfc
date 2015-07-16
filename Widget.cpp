@@ -14,6 +14,13 @@
 
 USING_NAMESPACE_WFX;
 
+LRESULT WidgetBase::SendWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+	LRESULT lResult = 0;
+	ProcessMessage(uMsg, wParam, lParam, lResult, 0);
+	return lResult;
+}
+
 Widget::Widget(void)
 : m_bNC(FALSE)
 , m_pParent(NULL)
@@ -28,8 +35,12 @@ Widget::Widget(void)
 , m_clrBkgnd(WID_BKGND_STATIC)
 , m_clrFrame(WID_FRAME_STATIC)
 , m_clrText(WID_TEXT_STATIC)
+, m_nHorzPosOffset(0)
+, m_nVertPosOffset(0)
 {
 	m_pFont.reset(new LOGFONTW);
+	memset(&m_rcWid, 0, sizeof(RECT));
+	memset(&m_rcDraw, 0, sizeof(RECT));
 }
 
 Widget::~Widget(void)
@@ -44,24 +55,29 @@ Widget::~Widget(void)
 
 RECT Widget::GetRect() const 
 {
-	return m_rc;
-}
-
-RECT Widget::GetWidRect() const
-{
 	return m_rcWid;
-}
-
-void Widget::SetWidRect( const RECT& rc )
-{
-	m_rcWid = rc;
-	SetRect(rc);
-	m_pDispatch->SetWidRect(this, rc);
 }
 
 void Widget::SetRect( const RECT& rc )
 {
-	m_rc = rc;
+	m_rcWid = rc;
+	m_pDispatch->SetWidRect(this, rc);
+}
+
+RECT Widget::GetParentRect() const
+{
+	RECT rcParent = {0};
+	if (m_pParent != NULL)
+	{
+		rcParent = m_pParent->GetRect();
+	}
+	else
+	{
+		ASSERT(m_pDispatch != NULL);
+		ASSERT(::IsWindow(m_pDispatch->GetHwnd()));
+		::GetClientRect(m_pDispatch->GetHwnd(), &rcParent);
+	}
+	return rcParent;
 }
 
 BOOL Widget::Create( const RECT& rc, WidDispatch* pDispatch, 
@@ -72,8 +88,8 @@ BOOL Widget::Create( const RECT& rc, WidDispatch* pDispatch,
 	m_pDispatch->Create(this);
 	m_bNC = bNC;
 	SetParent(pParent);
-	SetWidRect(rc);
 	SendWidMessage(WM_CREATE, 0, 0);
+	SetRect(rc);
 	return TRUE;
 }
 
@@ -112,7 +128,12 @@ void Widget::InvalidWid()
 
 void Widget::OnDraw( HDC hdc, const RECT& rcPaint )
 {
-	WfxRender::DrawWidget(hdc, m_strText, m_rc, m_wState, m_pDispatch);
+	RECT rc = m_rcWid;
+	rc.left = m_rcWid.left + m_nHorzPosOffset;
+	rc.top = m_rcWid.top + m_nVertPosOffset;
+	WfxRender::DrawSolidRect(hdc, m_rcWid, WID_BKGND_STATIC, m_pDispatch);
+	WfxRender::DrawText(hdc, rc, m_strText, RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
+	WfxRender::DrawFrame(hdc, m_rcWid, WID_FRAME_STATIC, m_pDispatch);
 }
 
 void Widget::SetHwid( HWID hWid )
@@ -219,12 +240,6 @@ void Widget::ShowWid( WORD wShow )
 	{
 		InvalidWid();
 	}
-}
-
-BOOL Widget::SendWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
-{
-	LRESULT lResult = 0;
-	return ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 }
 
 BOOL Widget::PostWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
@@ -352,17 +367,11 @@ BOOL Widget::ScrollWid( int XAmount, int YAmount )
 
 LRESULT Widget::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return 1;
-}
-
-void Widget::EstimateVirtualSize()
-{
-
+	return 0;
 }
 
 LRESULT Widget::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	//SetWidTimer(1111, 50, NULL);
 	return 0;
 }
 
@@ -383,6 +392,32 @@ LRESULT Widget::OnTimer( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled
 	return 0;
 }
 
+LRESULT Widget::OnKeyDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	InvalidWid();
+	return 0;
+}
+
+LRESULT Widget::OnQueryVirtualSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	SIZE sz = {0};
+	sz = WfxRender::EstimateWidgetSize(m_rcWid, 
+		m_strText, m_wState, m_pDispatch);
+	return MAKELRESULT(sz.cx, sz.cy);
+}
+
+LRESULT Widget::OnQueryVisualSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return MAKELRESULT(m_rcWid.right - m_rcWid.left, m_rcWid.bottom - m_rcWid.top);
+}
+
+LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	CalcScrollOffset(SB_HORZ, (BOOL)wParam);
+	InvalidWid();
+	return 1;
+}
+
 void Widget::SetDrawFunction( DrawFunction pDrawFun )
 {
 	m_pDrawFun = pDrawFun;
@@ -396,6 +431,56 @@ DrawFunction Widget::GetDrawFunction() const
 HFONT Widget::GetFontObject() const
 {
 	return GdiObject::Instance().GetEditFont();
+}
+
+LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+{
+	if (m_pParent != NULL)
+		return m_pParent->SendWidMessage(uMsg, wParam, lParam);
+	return 0;
+}
+
+RECT Widget::GetDrawRect() const
+{
+	return m_rcDraw;
+}
+
+void Widget::SetDrawRect( const RECT& rc )
+{
+	m_rcDraw = rc;
+}
+
+LONG Widget::GetVOffset() const
+{
+	return m_nVertPosOffset;
+}
+
+void Widget::SetVOffset( LONG nOffset )
+{
+	m_nVertPosOffset = nOffset;
+}
+
+LONG Widget::GetHOffset() const
+{
+	return m_nHorzPosOffset;
+}
+
+void Widget::SetHOffset( LONG nOffset )
+{
+	m_nHorzPosOffset = nOffset;
+}
+
+LONG Widget::CalcScrollOffset(int nBar, BOOL bFurther)
+{
+	if (nBar == SB_HORZ)
+	{
+		if (bFurther)
+			m_nHorzPosOffset -= GetScrollBar(nBar)->GetPos();
+		else
+			m_nHorzPosOffset += GetScrollBar(nBar)->GetPos();
+		return m_nHorzPosOffset;
+	}
+	return 0;
 }
 
 ScrollBar::ScrollBar( int nBar )
@@ -414,9 +499,6 @@ ScrollBar::ScrollBar( int nBar )
 	m_pScrollInfo->nMin = 0;
 	m_ptLButtonDown.x = -1;
 	m_ptLButtonDown.y = -1;
-	m_pArrow1->SetText(L"A1");
-	m_pArrow2->SetText(L"A2");
-	m_pSlider->SetText(L"Sl");
 }
 
 ScrollBar::~ScrollBar()
@@ -474,18 +556,18 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	if (SB_VERT == m_nBar)
 	{
 		rc.right -= m_nSAMargin;
-		rc.bottom = m_nArrorSize;
+		rc.bottom = rc.top + m_nArrorSize;
 	}
 	else
 	{
-		rc.right = m_nArrorSize;
+		rc.right = rc.left + m_nArrorSize;
 		rc.bottom -= m_nSAMargin;
 	}
 
 	rc.top += m_nSAMargin;
 
 	RECT rcArrow1 = rc;
-	m_pArrow1->SetWidRect(rcArrow1);
+	m_pArrow1->SetRect(rcArrow1);
 
 	rc = rcWid;
 
@@ -493,82 +575,89 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	{
 		rc.left += m_nSAMargin;
 		rc.right -= m_nSAMargin;
-		rc.bottom = m_nArrorSize;
-		rc.top = rcWid.top + rcWid.bottom - m_nArrorSize - m_nSAMargin;
+		rc.bottom = rcWid.bottom - m_nSAMargin;
+		rc.top = rc.bottom - m_nArrorSize;
 	}
 	else
 	{
-		rc.left = rcWid.left + rcWid.left - m_nArrorSize - m_nSAMargin;
-		rc.right = m_nArrorSize;
+		rc.left = rcWid.right - m_nArrorSize - m_nSAMargin;
+		rc.right = rc.left + m_nArrorSize;
 		rc.bottom -= m_nSAMargin;
 		rc.top += m_nSAMargin;
 	}
 
 	RECT rcArrow2 = rc;
-	m_pArrow2->SetWidRect(rcArrow2);
+	m_pArrow2->SetRect(rcArrow2);
 
 	rc = rcWid;
 
-	float fSliderSize = GetSliderSize();
-	float fPos = 0.0;
-	float fTotal = m_nBar == SB_VERT? rcWid.bottom - rcWid.top : rcWid.right - rcWid.left;//m_pScrollInfo->nMax - m_pScrollInfo->nMin;
-	if (fTotal > 0.00)
+	float fSliderSize = CalcSliderSize();
+	
+	RECT rcSliserMax = rcWid;
+	
+	if (SB_HORZ == m_nBar)
 	{
-		fPos = m_pScrollInfo->nPos / fTotal * fTotal;
+		rcSliserMax.left += m_nArrorSize + 2 * m_nSAMargin;
+		rcSliserMax.right -= m_nArrorSize + 2 * m_nSAMargin;
+		rcSliserMax.top += m_nSAMargin;
+		rcSliserMax.bottom -= m_nSAMargin;
 	}
 	else
 	{
-		fPos = 0.00;
+		rcSliserMax.top += m_nArrorSize + 2 * m_nSAMargin;
+		rcSliserMax.bottom -= m_nArrorSize + 2 * m_nSAMargin;
+		rcSliserMax.left += m_nSAMargin;
+		rcSliserMax.right -= m_nSAMargin;
 	}
+	rc = CalcSliderRect(rcSliserMax);
 
-	if (SB_VERT == m_nBar)
-	{
-		rc.left += m_nSAMargin;
-		rc.right -= m_nSAMargin;
-		rc.top += fPos + m_nArrorSize + m_nSAMargin;
-		rc.bottom = fSliderSize;
-	}
-	else
-	{
-		rc.left += fPos + m_nArrorSize + m_nSAMargin;
-		rc.right = fSliderSize;
-		rc.top += m_nSAMargin;
-		rc.bottom -= m_nSAMargin;
-	}
-
-	if (SB_VERT == m_nBar)
-	{
-		if (rc.top < rcArrow1.top + m_nArrorSize + m_nSAMargin)
-		{
-			rc.top = rcArrow1.top + (rcArrow1.bottom - rcArrow1.top) + m_nSAMargin;
-			rc.bottom = rc.top + fSliderSize;
-		}
-		if (rc.bottom > rcArrow2.top - m_nSAMargin)
-		{
-			rc.top = rcArrow2.top - m_nSAMargin - fSliderSize;
-			rc.bottom = rc.top + fSliderSize;
-		}
-	}
-	else
-	{
-		if (rc.left < rcArrow1.left + m_nArrorSize + m_nSAMargin)
-		{
-			rc.left = rcArrow1.right + m_nSAMargin;
-			rc.right = rc.left + fSliderSize;
-		}
-		if (rc.right > rcArrow2.top - m_nSAMargin)
-		{
-			rc.left = rcArrow2.left - m_nSAMargin - fSliderSize;
-			rc.right = rc.left + fSliderSize;
-		}
-	}
-
-	m_pSlider->SetWidRect(rc);
+	m_pSlider->SetRect(rc);
 
 	return 1;
 }
 
-float ScrollBar::GetSliderSize() const
+LRESULT ScrollBar::OnSliderOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	int nOffset = (int)wParam;
+	RECT rcSlider = m_pSlider->GetRect();
+	int nMin = GetSliderMin();
+	int nMax = GetSliderMax();
+	if (m_nBar == SB_HORZ)
+	{
+		rcSlider.left += nOffset;
+		rcSlider.right += nOffset;
+		if (rcSlider.left < nMin)
+		{
+			rcSlider.left = nMin;
+			rcSlider.right = rcSlider.left + m_nSliderSize;
+		}
+		if (rcSlider.right > nMax)
+		{
+			rcSlider.right = nMax;
+			rcSlider.left = rcSlider.right - m_nSliderSize;
+		}
+	}
+	else
+	{
+		rcSlider.top += nOffset;
+		rcSlider.bottom += nOffset;
+		if (rcSlider.top < nMin)
+		{
+			rcSlider.top = nMin;
+			rcSlider.bottom = rcSlider.top + m_nSliderSize;
+		}
+		if (rcSlider.bottom > nMax)
+		{
+			rcSlider.bottom = nMax;
+			rcSlider.top = rcSlider.bottom - m_nSliderSize;
+		}
+	}
+	m_pSlider->SetRect(rcSlider);
+	SetPos(nOffset);
+	return 1;
+}
+
+float ScrollBar::CalcSliderSize()
 {
 	ASSERT(m_pScrollInfo != NULL);
 	if (GetParent() == NULL)
@@ -576,63 +665,45 @@ float ScrollBar::GetSliderSize() const
 		return 0.0;
 	}
 
-	float ftotal = m_pScrollInfo->nMax - m_pScrollInfo->nMin;
-	if (ftotal < 0.00)
-	{
-		return 0.00;
-	}
+	RECT rcWid = GetRect(); 
+	LRESULT lResult = SendParentMessage(WUM_GET_VIRTUAL_SIZE);
+	SIZE szVirtual = {LOWORD(lResult), HIWORD(lResult)};
 
-	RECT rcWid = {0};
-	rcWid = GetRect();
+	lResult = SendParentMessage(WUM_GET_VISUAL_SIZE);
+	SIZE szVisual = {LOWORD(lResult), HIWORD(lResult)};
 
-	float fsildersize = 0.0;
-	float fslidersizeMax = 0.0;
+	LONG nOffset = 2 * m_nArrorSize - 2 * m_nSAMargin;
+	LONG nVirtualSize = SB_VERT == m_nBar? szVirtual.cy : szVirtual.cx;	
+	LONG nVisualSize = SB_VERT == m_nBar? szVisual.cy : szVisual.cx;
+	LONG nScrollBarSize = SB_VERT == m_nBar? rcWid.bottom - rcWid.top - nOffset
+		: rcWid.right - rcWid.left - nOffset;
 
-	float farrowsize = 2 * m_nArrorSize;
-	//Gdiplus::SizeF sz = GetParent()->GetVirtualSize();
-	SIZE sz = {0};
-	if (SB_VERT == m_nBar)
-	{
-		fslidersizeMax = rcWid.bottom - rcWid.top - farrowsize;
-		if (sz.cy > 0.00)
-			fsildersize = fslidersizeMax - (fslidersizeMax * (rcWid.bottom - rcWid.top) / sz.cy);
-		else
-			fsildersize = 0.0;
-	}
+	if (nVirtualSize > 0)
+		m_nSliderSize = nScrollBarSize * nVisualSize / nVirtualSize;
 	else
-	{
-		fslidersizeMax = rcWid.right - rcWid.left - farrowsize;
-		if (sz.cx > 0.00)
-			fsildersize = fslidersizeMax - (fslidersizeMax * (rcWid.right - rcWid.left) / sz.cx);
-		else
-			fsildersize = 0.0;
-	}
-	if (fsildersize < MIN_SCROLLBAR_SLIDER)
-		fsildersize = MIN_SCROLLBAR_SLIDER;
-	return fsildersize;
+		m_nSliderSize = 0;
+
+	if (m_nSliderSize < MIN_SCROLLBAR_SLIDER)
+		m_nSliderSize = MIN_SCROLLBAR_SLIDER;
+
+	return m_nSliderSize;
 }
 
 void ScrollBar::SetPos( int nPos )
 {
 	ASSERT(m_pScrollInfo != NULL);
-	RECT rcWid = GetRect();
+	BOOL bFurther = nPos > m_pScrollInfo->nPos;
 	if (m_pScrollInfo->nPos != nPos)
 	{
 		m_pScrollInfo->nPos = nPos;
-		if (m_pScrollInfo->nPos < 0)
-			m_pScrollInfo->nPos = 0;
-		if (SB_VERT == m_nBar)
-		{
-			if (m_pScrollInfo->nPos > rcWid.bottom - rcWid.top)
-				m_pScrollInfo->nPos = rcWid.bottom - rcWid.top;
-		}
+		if (m_pScrollInfo->nPos < m_pScrollInfo->nMin)
+			m_pScrollInfo->nPos = m_pScrollInfo->nMin;
+		if (m_pScrollInfo->nPos > m_pScrollInfo->nMax)
+				m_pScrollInfo->nPos = m_pScrollInfo->nMax;
+		if (m_nBar == SB_VERT) 
+			SendParentMessage(WM_VSCROLL, (WPARAM)bFurther);
 		else
-		{
-			if (m_pScrollInfo->nPos > rcWid.right - rcWid.left)
-				m_pScrollInfo->nPos = rcWid.right - rcWid.left;
-		}
-		SendWidMessage(WM_SIZE);
-		InvalidWid();
+			SendParentMessage(WM_HSCROLL,(WPARAM)bFurther);
 	}
 }
 
@@ -641,6 +712,83 @@ int ScrollBar::GetPos() const
 	ASSERT(m_pScrollInfo != NULL);
 	return m_pScrollInfo->nPos;
 }
+
+int ScrollBar::CalcSliderPos( const RECT& rcSlider )
+{
+	int nMaxSlider = GetSliderMax();
+	int nMidSlider = GetSlierMid();
+	if (nMaxSlider > 0)
+		return (m_pScrollInfo->nMax - m_pScrollInfo->nMin) * nMidSlider / nMaxSlider;
+	return 0;
+}
+
+RECT ScrollBar::CalcSliderRect(const RECT& rcMaxSlider)
+{
+	RECT rcSlider = rcMaxSlider;
+	int nMid = 0;
+	if (m_nBar == SB_HORZ)
+	{
+		nMid = rcMaxSlider.right * (float)m_pScrollInfo->nPos / (float)(m_pScrollInfo->nMax - m_pScrollInfo->nMin);
+		rcSlider.left = nMid - (float)m_nSliderSize / (float)2;
+		rcSlider.right = rcSlider.left + m_nSliderSize;
+		if (rcSlider.left < rcMaxSlider.left)
+		{
+			rcSlider.left = rcMaxSlider.left;
+			rcSlider.right = rcSlider.left + m_nSliderSize;
+		}
+		if (rcSlider.right > rcMaxSlider.right)
+		{
+			rcSlider.right = rcMaxSlider.right;
+			rcSlider.left = rcSlider.right - m_nSliderSize;
+		}
+	}
+	else
+	{
+		nMid = rcMaxSlider.bottom * (float)m_pScrollInfo->nPos / (float)(m_pScrollInfo->nMax - m_pScrollInfo->nMin);
+		rcSlider.top = nMid - (float)m_nSliderSize / (float)2;
+		rcSlider.bottom = rcSlider.top + m_nSliderSize;
+		if (rcSlider.top < rcMaxSlider.top)
+		{
+			rcSlider.top = rcMaxSlider.top;
+			rcSlider.bottom = rcSlider.top + m_nSliderSize;
+		}
+		if (rcSlider.bottom > rcMaxSlider.bottom)
+		{
+			rcSlider.bottom = rcMaxSlider.bottom;
+			rcSlider.top = rcSlider.right - m_nSliderSize;
+		}
+	}
+	
+	return rcSlider;
+}
+
+int ScrollBar::GetSliderMax()
+{
+	RECT rcWid = GetRect();
+	if (m_nBar == SB_HORZ)
+		return rcWid.right - m_nArrorSize - m_nSAMargin;
+	else
+		return rcWid.bottom - m_nArrorSize - m_nSAMargin;
+}
+
+int ScrollBar::GetSliderMin()
+{
+	RECT rcWid = GetRect();
+	if (m_nBar == SB_HORZ)
+		return rcWid.left + m_nArrorSize + m_nSAMargin;
+	else
+		return rcWid.top + m_nArrorSize + m_nSAMargin;
+}
+
+int ScrollBar::GetSlierMid()
+{
+	RECT rcSlider = m_pSlider->GetRect();
+	if (m_nBar == SB_HORZ)
+		return rcSlider.left + m_nSliderSize / 2;
+	else
+		return rcSlider.top + m_nSliderSize / 2;
+}
+
 
 SharedPtr<WidDispatch> LayoutBase::Parse( const std::wstring& strXml )
 {
@@ -683,9 +831,10 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	POINT pt = {0};
 	pt.x = GET_X_LPARAM(lParam);
 	pt.y = GET_Y_LPARAM(lParam);
-	RECT rc = GetParent()->GetRect();
+
 	if (m_bLButtonDown)
 	{
+		RECT rc = GetParentRect();
 		if (SB_VERT == m_nBar)
 		{
 			if (pt.y < rc.top || pt.y > rc.bottom)
@@ -698,11 +847,7 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 				return 0;
 			nOffset = pt.x - m_ptLButtonDown.x;
 		}
-		ScrollBar* pParent = dynamic_cast<ScrollBar*>(GetParent());
-		if (pParent != NULL)
-		{
-			pParent->SetPos(pParent->GetPos() + nOffset);
-		}
+		SendParentMessage(WUM_SB_OFFSET, (WPARAM)nOffset);
 		m_ptLButtonDown = pt;
 	}
 	else

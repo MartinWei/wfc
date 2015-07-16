@@ -23,6 +23,7 @@ WidDispatch::WidDispatch( HWND hWnd /*= NULL*/ )
 {
 	ClearH2O(m_h2oLastMouseMove);
 	ClearH2O(m_h2oCaptured);
+	ClearH2O(m_h2oFocused);
 	m_pTimer.reset(new Timer(this));
 }
 
@@ -106,19 +107,12 @@ void WidDispatch::DrawWid( Widget* pWid, const RECT& rcPaint )
 	{
 		return;
 	}
-	HDC hdc = ::GetDC(m_hWnd);
-	if (hdc == NULL)
-	{
-		return;
-	}
-	RECT rc = pWid->GetWidRect();
+
 	__begin_mem_draw
-	WfxRender::MemDC drawdc(hdc, rcPaint);
+	WfxRender::MemDC drawdc(m_hWnd, rcPaint);
 	DrawBkgnd(pWid, drawdc, rcPaint);
 	DrawGen(pWid, drawdc, rcPaint);
 	__end_mem_draw;
-
-	::ReleaseDC(m_hWnd, hdc);
 }
 
 void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const RECT& rcPaint)
@@ -161,7 +155,7 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 		pWid = GetObject(m_h2oCaptured);
 		if (pWid != NULL)
 		{
-			pWid->SendWidMessage(uMsg, wParam, lParam);
+			lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
 			return lResult;
 		}
 	}
@@ -206,7 +200,7 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 					}
 					SetMouseMoveH2O(std::make_pair(hWidNowMouse, pWid));
 				}
-				pWid->SendWidMessage(WM_MOUSEMOVE, wParam, lParam);
+				lResult = pWid->SendWidMessage(WM_MOUSEMOVE, wParam, lParam);
 
 				return lResult;
 			}
@@ -220,7 +214,8 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			if (pWid != NULL)
 			{
 				SetCapture(pWid);
-				pWid->SendWidMessage(uMsg, wParam, lParam);
+				SetFocus(pWid);
+				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
 			}
 		}
 		break;
@@ -236,7 +231,7 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			}
 			if (pWid != NULL)
 			{
-				pWid->SendWidMessage(uMsg,  wParam, lParam);
+				lResult = pWid->SendWidMessage(uMsg,  wParam, lParam);
 				Widget* pLastMM = GetObject(m_h2oLastMouseMove);
 				if (pLastMM != NULL)
 				{
@@ -251,7 +246,16 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			pWid = GetWidgetFromTimer((UINT_PTR)wParam);
 			if (pWid != NULL)
 			{
-				pWid->SendWidMessage(uMsg, wParam, lParam);
+				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+			}
+		}
+		break;
+	case WM_KEYDOWN:
+		{
+			pWid = GetObject(m_h2oFocused);
+			if (pWid != NULL)
+			{
+				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
 			}
 		}
 		break;
@@ -269,7 +273,7 @@ Widget* WidDispatch::GetWidPt( POINT pt )
 		it != m_Handle2Object.end(); ++it)
 	{
 		ASSERT(it->second != NULL);
-		RECT rcWid = it->second->GetWidRect();
+		RECT rcWid = it->second->GetRect();
 		if (::PtInRect(&rcWid, pt))
 		{
 			rgpWidInPt.push_back(it->second);
@@ -298,12 +302,12 @@ Widget* WidDispatch::GetWidPt(const std::vector<Widget*>& rgpWid)
 	{
 		pWid = *it;
 		ASSERT(pWid != NULL);
-		RECT rcWid = pWid->GetWidRect();
+		RECT rcWid = pWid->GetRect();
 		float fArea = (rcWid.right - rcWid.left) * (rcWid.bottom - rcWid.top);
 		float fMinArea = fArea;
 		for (; it != rgpWid.end(); ++it)
 		{
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 			fArea = (rcWid.right - rcWid.left) * (rcWid.bottom - rcWid.top);
 			if (fArea < fMinArea)
 			{
@@ -400,6 +404,14 @@ void WidDispatch::SetCapture( Widget* pWid )
 	::SetCapture(m_hWnd);
 }
 
+void WidDispatch::SetFocus(Widget* pWid)
+{
+	ASSERT(m_hWnd != NULL);
+	ASSERT(pWid != NULL);
+	ASSERT(*pWid != INVALID_HWID);
+	m_h2oFocused = std::make_pair(pWid->GetHwid(), pWid);
+}
+
 void WidDispatch::ReleaseCapture()
 {
 	ClearH2O(m_h2oCaptured);
@@ -437,8 +449,8 @@ void WidDispatch::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
 void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
 	ASSERT(pWid != NULL);
-	RECT rcWid = pWid->GetWidRect();
-	RECT rcSB;
+	RECT rcWid = pWid->GetRect();
+	RECT rcSB = {0};
 	if (uBarFlag == WESB_BOTH)
 	{
 		if (bEnable)
@@ -459,7 +471,7 @@ void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*=
 				pWid->SetScrollBar(SB_HORZ, pBar);
 			}
 			pWid->SetSBFlag(WESB_BOTH);
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 		}
 		else
 		{
@@ -468,7 +480,7 @@ void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*=
 			pBar = pWid->GetScrollBar(SB_HORZ);
 			TDEL(pBar);
 			pWid->SetSBFlag(WESB_NONE);
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 		}
 	}
 	else if (uBarFlag == WESB_HORZ)
@@ -483,14 +495,14 @@ void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*=
 				pWid->SetScrollBar(SB_HORZ, pBar);
 			}
 			pWid->SetSBFlag(pWid->GetSBFlag() | WESB_HORZ);
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 		}
 		else
 		{
 			ScrollBar* pBar = pWid->GetScrollBar(SB_HORZ);
 			TDEL(pBar);
 			pWid->SetSBFlag(pWid->GetSBFlag() & ~WESB_HORZ);
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 		}
 	}
 	else if (uBarFlag == WESB_VERT)
@@ -505,14 +517,14 @@ void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*=
 				pWid->SetScrollBar(WESB_VERT, pBar);
 			}
 			pWid->SetSBFlag(pWid->GetSBFlag() | WESB_VERT);
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 		}
 		else
 		{
 			ScrollBar* pBar = pWid->GetScrollBar(WESB_VERT);
 			TDEL(pBar);
 			pWid->SetSBFlag(pWid->GetSBFlag() & ~WESB_VERT);
-			rcWid = pWid->GetWidRect();
+			rcWid = pWid->GetRect();
 		}
 	}
 	else
@@ -538,28 +550,54 @@ void WidDispatch::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM 
 
 void WidDispatch::SetWidRect( Widget* pWid, const RECT& rc )
 {
+	ASSERT(pWid != NULL);
+
 	RECT rcWid;
 	rcWid = pWid->GetRect();
 	RECT rcSB = rcWid;
+	RECT rcDraw = rcWid;
+	SIZE sz = {0};
+	LRESULT lResult = pWid->SendWidMessage(WUM_GET_VIRTUAL_SIZE);
+	sz.cx = LOWORD(lResult);
+	sz.cy = HIWORD(lResult);
+	BOOL bOutRangeHorz = rcWid.right - rcWid.left < sz.cx;
+	BOOL bOutRangeVert = rcWid.bottom - rcWid.top < sz.cy;
 	if (pWid->GetSBFlag() & WESB_VERT)
 	{
 		ASSERT(pWid->GetScrollBar(SB_VERT) != NULL);
-		rcSB.left = rcWid.right - SIZE_SCROLLBAR - 1;
-		rcSB.right = rcSB.left + SIZE_SCROLLBAR;
-		rcSB.top += 1;
-		rcSB.bottom -= SIZE_SCROLLBAR + 1;
-		pWid->GetScrollBar(SB_VERT)->SetWidRect(rcSB);
+		if (!bOutRangeVert)
+		{
+			memset(&rcSB, 0, sizeof(RECT));
+		}
+		else
+		{
+			rcSB.left = rcWid.right - SIZE_SCROLLBAR - 1;
+			rcSB.right = rcSB.left + SIZE_SCROLLBAR;
+			rcSB.top += 1;
+			rcSB.bottom -= SIZE_SCROLLBAR + 1;
+		}
+		pWid->GetScrollBar(SB_VERT)->SetRect(rcSB);
+		rcDraw.right -= rcSB.right - rcSB.left;
 	}
 	rcSB = rcWid;
 	if (pWid->GetSBFlag() & WESB_HORZ)
 	{
 		ASSERT(pWid->GetScrollBar(SB_HORZ) != NULL);
-		rcSB.left += 1;//rcWid.X + rcWid.Width - SIZE_SCROLLBAR - 1;
-		rcSB.right -= SIZE_SCROLLBAR + 1;
-		rcSB.top = rcWid.top + rcWid.bottom - rcWid.top - SIZE_SCROLLBAR - 1;
-		rcSB.bottom = rcSB.top + SIZE_SCROLLBAR;
-		pWid->GetScrollBar(SB_HORZ)->SetWidRect(rcSB);
+		if (!bOutRangeHorz)
+		{
+			memset(&rcSB, 0, sizeof(RECT));
+		}
+		else
+		{
+			rcSB.left += 1;
+			rcSB.right -= SIZE_SCROLLBAR + 1;
+			rcSB.top = rcWid.top + rcWid.bottom - rcWid.top - SIZE_SCROLLBAR - 1;
+			rcSB.bottom = rcSB.top + SIZE_SCROLLBAR;
+		}
+		pWid->GetScrollBar(SB_HORZ)->SetRect(rcSB);
+		rcDraw.bottom -= rcSB.bottom - rcSB.top;
 	}
+	pWid->SetDrawRect(rcDraw);
 	pWid->SendWidMessage(WM_SIZE, 0, 0);
 }
 

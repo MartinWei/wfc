@@ -80,12 +80,12 @@ LRESULT ComboWnd::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 	GetClientRect(rc);
 	RECT rcWid = rc;
 	ASSERT(m_pRoot != NULL);
-	m_pRoot->SetWidRect(rcWid);
+	m_pRoot->SetRect(rcWid);
 	rcWid.bottom = rcWid.top + 30;
 	ULONG lItems = pComboBox->GetSize();
 	for (ULONG i = 0; i < lItems; i++)
 	{
-		m_rgpItems[i]->SetWidRect(rcWid);
+		m_rgpItems[i]->SetRect(rcWid);
 		rcWid.top += rcWid.bottom - rcWid.top;
 	}
 	
