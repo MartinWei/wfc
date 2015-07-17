@@ -252,6 +252,7 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 		break;
 	case WM_KEYDOWN:
 	case WM_MOUSEHWHEEL:
+	case WM_MOUSEWHEEL:
 		{
 			pWid = GetObject(m_h2oFocused);
 			if (pWid != NULL)
