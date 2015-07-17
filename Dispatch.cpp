@@ -251,6 +251,7 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 		}
 		break;
 	case WM_KEYDOWN:
+	case WM_MOUSEHWHEEL:
 		{
 			pWid = GetObject(m_h2oFocused);
 			if (pWid != NULL)
@@ -557,7 +558,7 @@ void WidDispatch::SetWidRect( Widget* pWid, const RECT& rc )
 	RECT rcSB = rcWid;
 	RECT rcDraw = rcWid;
 	SIZE sz = {0};
-	LRESULT lResult = pWid->SendWidMessage(WUM_GET_VIRTUAL_SIZE);
+	LRESULT lResult = pWid->SendWidMessage(WUM_QUERY_VIRTUAL_SIZE);
 	sz.cx = LOWORD(lResult);
 	sz.cy = HIWORD(lResult);
 	BOOL bOutRangeHorz = rcWid.right - rcWid.left < sz.cx;

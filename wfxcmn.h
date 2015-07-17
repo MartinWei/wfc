@@ -103,6 +103,7 @@ class WFX_API LinkCell : public Cell
 
 class WFX_API HeaderCtrl : public Widget
 {
+	friend class ListCtrl;
 public:
 	HeaderCtrl();
 public:
@@ -119,21 +120,22 @@ public:
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
-public:
-	LONG GetSelected(POINT pt);
+protected:
 	LONG GetSelected() const;
 	void SetSelected(LONG nSelected);
 	BOOL IsAscendSort() const;
 	ULONG GetTotalColumns() const;
 	ULONG GetColumnWidth(ULONG nCol) const;
+	LONG GetSelected(POINT pt);
+	void CalcCellRect();
 public:
-
 	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
 	std::vector<SharedPtr<HeaderInfo> > m_rgpHdi;
+	RECT m_rgRowNumRect;
 	LONG m_nSelected;
 	BOOL m_bAscendSort;
 };
@@ -160,13 +162,14 @@ public:
 public:
 	WFX_BEGIN_MSG_MAP(ListCtrl)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
+		WFX_MESSAGE_HANDLER(WUM_LC_GET_PROPERTIES, OnGetProperties)
 		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
 		WFX_MESSAGE_HANDLER(WUM_LC_HITCOL, OnColChanged)
 		WFX_MESSAGE_HANDLER(WUM_LC_HEADSIZE, OnHeadSizeChanged)
 		WFX_MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
 		WFX_MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
-		WFX_MESSAGE_HANDLER(WUM_GET_VIRTUAL_SIZE, OnQueryVirtualSize)
+		WFX_MESSAGE_HANDLER(WM_MOUSEHWHEEL, OnMouseWheel)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
@@ -184,7 +187,9 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnQueryVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT OnGetProperties(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
 	HeaderCtrl* GetHeaderCtrl() const;
@@ -202,29 +207,45 @@ public:
 public:
 	ULONG GetTotalRows() const;
 	ULONG GetTotalColumns() const;
-	ULONG GetSeqBarWidth() const;
+
+	ULONG GetRowNumBarWidth() const;
+	void SetRowNumBarWidth(ULONG nWidth);
 	ULONG GetHeadHeight() const;
+	void SetHeadHeight(ULONG nHeight);
 	LONG GetFixedRow() const;
 	void SetFixedRow(LONG nRow);
 	LONG GetFixedCol() const;
 	void SetFixedCol(LONG nCol);
+	LONG GetStartRow() const;
+	void SetStartRow(LONG nRow);
+	LONG GetEndRow() const;
+	void SetEndRow(LONG nRow);
+	LONG GetStartCol() const;
+	void SetStartCol(LONG nCol);
+	LONG GetEndCol() const;
+	void SetEndCol(LONG nCol);
 public:
 	int InsertColumn(const std::wstring& strName, 
-		UINT nWidth, DWORD dwFormat, ULONG nCellType);
-	int InsertRow(int nHeight = -1);
+		UINT nWidth, DWORD dwFormat, ULONG nCellType, BOOL bAdjust = FALSE);
+	int InsertRow(int nHeight = -1, BOOL bAdjust = FALSE);
 protected:
 	BOOL GetCellID( POINT pt, std::pair<CellID, RECT>& cellID);
 protected:
 	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 protected:
-	void CalcCol();
-	void CalcRow();
-	void CalcPos(int nBar, BOOL bFurther);
+	virtual SIZE EstimateVirualSize();
+protected:
+	BOOL CalcCol();
+	BOOL CalcRow();
+	void CalcCellRect();
+	BOOL CalcPos(int nBar, BOOL bFurther);
 protected:
 	SharedPtr<HeaderCtrl> m_pHeadCtrl;
 	std::map<CellID, RECT> m_rgRect;
+	std::vector<RECT> m_rgRowNumRect;
 	ULONG m_nHeadHeight;
 	ULONG m_nTotalRow;
+	ULONG m_nRowNumBarWidth;
 	LONG m_nStartRow;
 	LONG m_nEndRow;
 	LONG m_nStartCol;
@@ -248,6 +269,9 @@ class WFX_API TreeCtrl : public Widget
 {
 };
 
+class WFX_API RichCtrl : public Widget
+{
 
+};
 
 END_NAMESPACE_WFX

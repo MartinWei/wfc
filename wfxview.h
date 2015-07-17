@@ -29,4 +29,5 @@ protected:
 	Document* m_pDoc;
 };
 
+
 END_NAMESPACE_WFX

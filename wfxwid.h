@@ -76,14 +76,17 @@ public:
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		WFX_MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		WFX_MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-		WFX_MESSAGE_HANDLER(WUM_GET_VIRTUAL_SIZE, OnQueryVirtualSize)
+		WFX_MESSAGE_HANDLER(WUM_QUERY_VIRTUAL_SIZE, OnQueryVirtualSize)
 		WFX_MESSAGE_HANDLER(WUM_GET_VISUAL_SIZE, OnQueryVisualSize)
+		WFX_MESSAGE_HANDLER(WUM_GET_VIRTUAL_SIZE, OnGetVirtualSize)
+		WFX_MESSAGE_HANDLER(WUM_SB_OFFSET, OnScrollBarOffset)
 		WFX_MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
 	WFX_END_MSG_MAP()
 
 public:
 	BOOL Create(const RECT& rc, WidDispatch* pDispatch,
 		Widget* pParent = NULL, BOOL bNC = FALSE);
+
 	// Position
 public:
 	RECT GetRect() const;
@@ -139,9 +142,6 @@ protected:
 public:
 	void SetText(const std::wstring& strText);
 	std::wstring GetText() const;
-
-	void SetDrawFunction(DrawFunction pDrawFun);
-	DrawFunction GetDrawFunction() const;
 	virtual HFONT GetFontObject() const;
 public:
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -174,9 +174,11 @@ public:
 		BOOL& bHandled);
 	wfx_msg LRESULT OnQueryVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
-	wfx_msg LRESULT OnSetVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT OnGetVirtualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnQueryVisualSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnScrollBarOffset(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnHScroll(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -185,18 +187,18 @@ public:
 	void SetVOffset(LONG nOffset);
 	LONG GetHOffset() const;
 	void SetHOffset(LONG nOffset);
-protected:
-	LONG CalcScrollOffset(int nBar, BOOL bFurther);
-private:
-	WORD m_wState;
+	SIZE GetVirtualSize() const;
 
-private:
-	void InitFont();
+public:
+	void SetVirtualSizeValid(BOOL bValid = TRUE);
+protected:
+	virtual SIZE EstimateVirualSize();
 
 	// Identifier
 public:
 	HWID m_hWid;
 	WidDispatch* m_pDispatch;
+
 protected:
 	std::wstring m_strText;
 	DWORD m_dwFormat;
@@ -204,7 +206,7 @@ protected:
 	COLORREF m_clrBkgnd;
 	COLORREF m_clrFrame;
 	COLORREF m_clrText;
-	DrawFunction m_pDrawFun;
+
 private:
 	// Position
 	RECT m_rcDraw;
@@ -224,6 +226,13 @@ private:
 	LONG m_nVertPosOffset;
 	// Timers
 	std::vector<UINT_PTR> m_rgTimer;
+
+	// Size
+	SIZE m_szVirtual;
+	BOOL m_bVirtualSizeValid;
+
+	// State
+	WORD m_wState;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -275,15 +284,20 @@ public:
 	void SetBar(int nBar);
 	void GetScrollInfo(SCROLLINFO* pScrollInfo) const;
 	void SetScrollInfo(const SCROLLINFO* pScrollInfo);
+	void SetRange(int nMax, int nMin);
 	void SetPos(int nPos);
 	int GetPos() const;
+	//int GetMax() const;
+	//int GetMin() const;
+
+protected:
 	int CalcSliderPos(const RECT& rcSlider);
 	RECT CalcSliderRect(const RECT& rcMaxSlider);
 	int GetSliderMax();
 	int GetSliderMin();
 	int GetSlierMid();
-protected:
 	float CalcSliderSize();
+
 public:
 	wfx_msg LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -349,6 +363,11 @@ protected:
 	SharedPtr<Gdiplus::Image> m_pMouse;
 	SharedPtr<Gdiplus::Image> m_pPush;
 	SharedPtr<Gdiplus::Image> m_pChecked;
+};
+
+class WFX_API SplitterBar : public Widget
+{
+
 };
 
 class WFX_API Button : public ImageWid

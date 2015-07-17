@@ -230,8 +230,8 @@ void WfxRender::DrawHeadCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const
 		clrText = RGB(255, 0, 0);
 	}
 	WfxRender::DrawSolidRect(hdc, rcPaint, clrBk, NULL);
-	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
 	WfxRender::DrawText(hdc, rcPaint, strDraw, clrText, dwFormat);
+	/*WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);*/
 }
 
 SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
