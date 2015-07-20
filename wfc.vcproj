@@ -171,6 +171,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\App.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Button.cpp"
 				>
 			</File>
@@ -187,7 +191,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Doc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Label.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Layout.cpp"
 				>
 			</File>
 			<File
@@ -200,6 +212,10 @@
 			</File>
 			<File
 				RelativePath=".\RadioButton.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RichEdit.cpp"
 				>
 			</File>
 			<File
@@ -224,6 +240,14 @@
 			</File>
 			<File
 				RelativePath=".\TextBox.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TreeCtrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\View.cpp"
 				>
 			</File>
 			<File

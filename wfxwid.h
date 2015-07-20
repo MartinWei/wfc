@@ -21,11 +21,10 @@ class Timer;
 class Widget;
 	class Slider;
 	class ScrollBar;
-	class RoundWid;
-		class ImageWid;
-			class Button;
-				class RadioButtonItem;
-				class CheckBoxItem;
+	class ImageWid;
+		class Button;
+			class RadioButtonItem;
+			class CheckBoxItem;
 	class CheckBox;
 	class RadioButton;
 	class Label;
@@ -225,7 +224,7 @@ private:
 	UINT m_uBarFlag;
 	LONG m_nHorzPosOffset;
 	LONG m_nVertPosOffset;
-	// Timers
+	// Timers need to be killed.
 	std::vector<UINT_PTR> m_rgTimer;
 
 	// Size
@@ -320,26 +319,6 @@ protected:
 	SharedPtr<Widget> m_pArrow1;
 	SharedPtr<Widget> m_pArrow2;
 	SharedPtr<Widget> m_pSlider;
-};
-
-class WFX_API RoundWid : public Widget
-{
-public:
-	RoundWid();
-	virtual ~RoundWid();
-
-public:
-	WFX_BEGIN_MSG_MAP(RoundWid)
-		WFX_MESSAGE_HANDLER(WM_SIZE, OnSize)
-		WFX_CHAIN_MSG_MAP(Widget)
-	WFX_END_MSG_MAP()
-public:
-	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-protected:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
-protected:
-	SharedPtr<Gdiplus::GraphicsPath> m_pGrphPath;
 };
 
 class WFX_API ImageWid : public Widget
@@ -646,6 +625,25 @@ class WFX_API Menu : public InPlaceWnd
 
 //////////////////////////////////////////////////////////////////////////
 // Timer: helper class for WidDispatch
+struct TimerInfo
+{
+	TimerInfo()
+		: m_nRealTimer(0)
+		, m_hWnd(NULL)
+		, m_nSrcTimer(0)
+	{
+		m_pSender.first = INVALID_HWID;
+		m_pSender.second = NULL;
+	}
+	std::pair<HWID, Widget*> m_pSender;
+	UINT_PTR m_nRealTimer;
+	HWND m_hWnd;
+	UINT_PTR m_nSrcTimer;
+};
+
+typedef SharedPtr<TimerInfo> PTimerInfo;
+typedef std::vector<PTimerInfo>::iterator TimerIter;
+
 class Timer
 {
 	friend class WidDispatch;
@@ -657,10 +655,13 @@ public:
 	BOOL KillWidTimer(Widget* pWid, UINT_PTR uIDEvent);
 	Widget* GetWidgetFromTimer(UINT_PTR uIDEvent);
 	void Destroy(Widget* pWid);
+	UINT_PTR GenerateTimerID();
 protected:
 	WidDispatch* m_pDispatch;
 	std::map<UINT_PTR, 
 		std::pair<HWID, Widget*> > m_Timer;
+	std::vector<PTimerInfo> m_rgpTimers; 
+	UINT_PTR m_nTimerID;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -727,24 +728,6 @@ public:
 	static HWID s_hWidBase;
 private:
 	static HINSTANCE s_hInstance;
-};
-
-class GdiObject
-{
-public:
-	static GdiObject& Instance();
-	~GdiObject();
-public:
-	HFONT GetEditFont();
-private:
-	HFONT m_hEditFont;
-private:
-	GdiObject();
-};
-class WFX_API LayoutBase
-{
-public:
-	virtual SharedPtr<WidDispatch> Parse(const std::wstring& strXml);
 };
 
 END_NAMESPACE_WFX

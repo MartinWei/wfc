@@ -465,7 +465,7 @@ LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 HFONT Widget::GetFontObject() const
 {
-	return GdiObject::Instance().GetEditFont();
+	return NULL;
 }
 
 LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
@@ -832,13 +832,6 @@ int ScrollBar::GetSlierMid()
 		return rcSlider.top + m_nSliderSize / 2;
 }
 
-
-SharedPtr<WidDispatch> LayoutBase::Parse( const std::wstring& strXml )
-{
-	SharedPtr<WidDispatch> p;
-	return p;
-}
-
 Slider::Slider( int nBar )
 : m_nBar(nBar)
 , m_bInSlider(FALSE)
@@ -907,6 +900,7 @@ void Slider::OnDraw( HDC hdc, const RECT& rcPaint )
 
 Timer::Timer( WidDispatch* pDispatch )
 : m_pDispatch(pDispatch)
+, m_nTimerID(0x1000)
 {
 
 }
@@ -918,32 +912,59 @@ UINT_PTR Timer::SetWidTimer( Widget* pWid,
 {
 	ASSERT(m_pDispatch != NULL);
 	ASSERT(pWid != NULL);
-	m_Timer.insert(std::make_pair(nIDEvent, std::make_pair(pWid->GetHwid(), pWid)));
-	return ::SetTimer(m_pDispatch->GetHwnd(), nIDEvent, uElapse, lpTimerFunc);
+	ASSERT(uElapse > 0);
+	PTimerInfo pTI(new TimerInfo);
+	pTI->m_pSender.first = pWid->GetHwid();
+	pTI->m_pSender.second = pWid;
+	pTI->m_hWnd = m_pDispatch->GetHwnd();
+	pTI->m_nRealTimer = GenerateTimerID();
+	pTI->m_nSrcTimer = nIDEvent;
+	m_rgpTimers.push_back(pTI);
+	return ::SetTimer(m_pDispatch->GetHwnd(), pTI->m_nRealTimer, uElapse, lpTimerFunc);
 }
 
 BOOL Timer::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
 {
-	std::map<UINT_PTR, std::pair<HWID, Widget*> >::iterator it =
-		m_Timer.find(uIDEvent);
-	if (it != m_Timer.end())
+	ASSERT(m_pDispatch != NULL);
+	ASSERT(pWid!=NULL);
+	PTimerInfo pTimer;
+	for( TimerIter it = m_rgpTimers.begin(); it != m_rgpTimers.end(); ++it ) 
 	{
-		m_Timer.erase(it);
+		pTimer = *it;
+		if( pTimer->m_pSender.first == pWid->GetHwid()
+			&& pTimer->m_pSender.second == pWid
+			&& pTimer->m_hWnd == m_pDispatch->GetHwnd()
+			&& pTimer->m_nSrcTimer == uIDEvent )
+		{
+			::KillTimer(pTimer->m_hWnd, pTimer->m_nRealTimer);
+			m_rgpTimers.erase(it);
+			return TRUE;
+		}
 	}
-	return ::KillTimer(m_pDispatch->GetHwnd(), uIDEvent);
+	return FALSE;
+}
+
+UINT_PTR Timer::GenerateTimerID()
+{
+	m_nTimerID = (++m_nTimerID) % 0xFF;
+	return m_nTimerID;
 }
 
 Widget* Timer::GetWidgetFromTimer( UINT_PTR uIDEvent )
 {
-	std::map<UINT_PTR, std::pair<HWID, Widget*> >::iterator it =
-		m_Timer.find(uIDEvent);
-	if (it != m_Timer.end())
+	PTimerInfo pTimer;
+	for( TimerIter it = m_rgpTimers.begin(); it != m_rgpTimers.end(); ++it ) 
 	{
-		ASSERT(it->second.second != NULL);
-		return it->second.second;
+		pTimer = *it;
+		if(pTimer->m_hWnd == m_pDispatch->GetHwnd()
+			&& pTimer->m_nRealTimer == uIDEvent )
+		{
+			return pTimer->m_pSender.second;
+		}
 	}
-	return NULL;
+	return FALSE;
 }
+
 
 void Timer::Destroy( Widget* pWid )
 {
@@ -953,38 +974,6 @@ void Timer::Destroy( Widget* pWid )
 Timer::~Timer()
 {
 
-}
-
-RoundWid::RoundWid()
-: m_pGrphPath(new Gdiplus::GraphicsPath)
-{
-
-}
-
-RoundWid::~RoundWid()
-{
-
-}
-
-LRESULT RoundWid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	RECT rc;
-	rc = GetRect();
-	WfxRender::GetRoundRect(rc, *m_pGrphPath);
-	return Widget::OnSize(uMsg, wParam, lParam, bHandled);
-}
-
-void RoundWid::OnDraw( HDC hdc, const RECT& rcPaint )
-{
-	/*RECT rc;
-	rc = GetRect();
-	Gdiplus::SolidBrush brsh(m_clrBkgnd);
-	grph.FillPath(&brsh, m_pGrphPath.get());
-	Gdiplus::Pen pn(m_clrFrame);
-	grph.DrawPath(&pn, m_pGrphPath.get());
-	brsh.SetColor(m_clrText);*/
-	/*grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
-		rc, m_pFormat.get(), &brsh);*/
 }
 
 ImageWid::ImageWid()
@@ -1084,31 +1073,4 @@ LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 		return 0;
 	}
 	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
-}
-
-GdiObject::GdiObject()
-:m_hEditFont(NULL)
-{
-	LOGFONTW logfont = {0};
-	lstrcpyW(logfont.lfFaceName, WID_FONT_STATIC);
-	logfont.lfHeight = WID_FSIZE_STATIC;
-	logfont.lfWeight = FW_NORMAL;
-	logfont.lfCharSet = DEFAULT_CHARSET;
-	m_hEditFont = ::CreateFontIndirectW(&logfont);
-}
-
-GdiObject& GdiObject::Instance()
-{
-	static GdiObject gdiobj;
-	return gdiobj;
-}
-
-GdiObject::~GdiObject()
-{
-	TDELGDI(m_hEditFont);
-}
-
-HFONT GdiObject::GetEditFont()
-{
-	return m_hEditFont;
 }

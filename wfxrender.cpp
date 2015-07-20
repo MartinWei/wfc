@@ -58,70 +58,6 @@ WfxRender::MemDC::operator HDC()
 	return m_hdcMem;
 }
 
-GdiPlusHelper::GdiPlusHelper()
-{
-	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	Gdiplus::GdiplusStartup(&m_nGdiPlusToken, &gdiplusStartupInput, NULL);
-}
-
-GdiPlusHelper::~GdiPlusHelper()
-{
-	Gdiplus::GdiplusShutdown(m_nGdiPlusToken);
-}
-
-BOOL WfxRender::GetRoundRect( const RECT& rc, 
-								 Gdiplus::GraphicsPath& path, float r /*= 10.0*/ )
-{
-	return FALSE;
-	/*if (rc.Width <= 0 || rc.Height <= 0)
-		return FALSE;
-
-	path.Reset();
-
-	Gdiplus::PointF pt1;
-	Gdiplus::PointF pt2;
-	RECT rcArc(rc);
-	rcArc.Height = r;
-	rcArc.Width = r;
-	pt1.X = rc.X;
-	pt1.Y = rc.Y + rc.Height - r/2 ;
-	pt2.X = pt1.X;
-	pt2.Y = rc.Y + r;
-	path.AddLine(pt1, pt2);
-	path.AddArc(rcArc, 180.0, 90.0);
-
-	pt1.X = rc.X + r;
-	pt1.Y = rc.Y;
-	pt2.X = rc.X + rc.Width - r;
-	pt2.Y = pt1.Y;
-	path.AddLine(pt1, pt2);
-	rcArc.X = pt2.X;
-	rcArc.Y = pt2.Y;
-	path.AddArc(rcArc, 270.0, 90.0);
-
-	pt1.X = rc.X + rc.Width;
-	pt1.Y = rc.Y + r;
-	pt2.X = pt1.X;
-	pt2.Y = rc.Y + rc.Height - r;
-	path.AddLine(pt1, pt2);
-
-	rcArc.X = rc.X + rc.Width - r;
-	rcArc.Y = pt2.Y;
-	path.AddArc(rcArc, 0.0, 90.0);
-
-	pt1.X = rc.X + rc.Width - r;
-	pt1.Y = rc.Y + rc.Height;
-	pt2.X = rc.X + r;
-	pt2.Y = pt1.Y;
-	path.AddLine(pt1, pt2);
-
-	rcArc.X = rc.X;
-	rcArc.Y = rc.Y + rc.Height - r;
-	path.AddArc(rcArc, 90.0, 90);
-
-	return TRUE;*/
-}
-
 void WfxRender::DrawButtton( HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
@@ -304,15 +240,6 @@ void WfxRender::DrawLayerCell( HDC hdc, const RECT& rcPaint, DWORD dwState, cons
 	WfxRender::DrawText(hdc, rcPaint, str, RGB(255, 255, 255), dwFormat);
 	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
 }
-
-
-
-
-BEGIN_NAMESPACE_WFX
-
-GdiPlusHelper gdiplushelper;
-
-END_NAMESPACE_WFX
 
 WfxRender::RenderClip::~RenderClip()
 {

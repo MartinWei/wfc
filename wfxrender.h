@@ -14,17 +14,6 @@
 
 BEGIN_NAMESPACE_WFX
 
-
-class WFX_API GdiPlusHelper
-{
-public:
-	GdiPlusHelper();
-	~GdiPlusHelper();
-	ULONG_PTR m_nGdiPlusToken;
-};
-
-extern WFX_API GdiPlusHelper gdiplushelper;
-
 class WFX_API WfxRender
 {
 public:
@@ -55,8 +44,7 @@ public:
 		HRGN m_hOldRgn;
 	};
 public:
-	static BOOL GetRoundRect(const RECT& rc, 
-		Gdiplus::GraphicsPath& path, float r = 10.0);
+
 	static void DrawWidget(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void DrawButtton(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void DrawCheckBox(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
@@ -75,7 +63,5 @@ public:
 		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
 	static SIZE EstimateWidgetSize(const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch = NULL);
 };
-
-
 
 END_NAMESPACE_WFX
