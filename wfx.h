@@ -159,6 +159,13 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WCS_SELECTED		0x00000001
 #define WCS_ASORT			0x00000010
 #define WCS_NASORT			0x00000100
+#define WCS_MOUSEMOVE		0x00001000
+#define WCS_EXPAND			0x00010000
+#define WCS_CLOSE			0x00100000
+
+// Cell Type
+#define WCT_TEXT			0
+#define WCT_Layer			1
 
 enum Wfx_Msg
 {
@@ -172,6 +179,8 @@ enum Wfx_Msg
 	WUM_LC_HITCOL,
 	WUM_LC_HEADSIZE,
 	WUM_LC_GET_PROPERTIES,
+	WUM_LC_CELL_DRAW,
+	WUM_LC_CELL_EXPAND,
 	WUM_END
 };
 

@@ -231,7 +231,20 @@ void WfxRender::DrawHeadCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const
 	}
 	WfxRender::DrawSolidRect(hdc, rcPaint, clrBk, NULL);
 	WfxRender::DrawText(hdc, rcPaint, strDraw, clrText, dwFormat);
-	/*WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);*/
+	if (dwState & WCS_MOUSEMOVE)
+	{
+		std::wstring strLine;
+		strLine.assign(strDraw.size(), L'_');
+		WfxRender::DrawText(hdc, rcPaint, strLine, clrText, dwFormat);
+	}
+	if (dwState & WCS_MOUSEMOVE)
+	{
+		WfxRender::DrawFrame(hdc, rcPaint, RGB(255, 0, 0), NULL);
+	}
+	else
+	{
+		WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
+	}
 }
 
 SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
@@ -254,6 +267,45 @@ SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const std::wstring& strText,
 	}
 	return sz;
 }
+
+void WfxRender::DrawLinkCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const std::wstring& strText, COLORREF clrText, DWORD dwFormat )
+{
+	COLORREF clrBk = WCELL_BKGRND;
+	if (dwState & WCS_SELECTED)
+		clrBk = WCELL_SELECTED;
+	std::wstring strDraw = strText;
+	if (dwState & WCS_ASORT)
+	{
+		strDraw += L"^";
+		clrText = RGB(0, 255, 0);
+	}
+	else if (dwState & WCS_NASORT)
+	{
+		strDraw += L"v";
+		clrText = RGB(255, 0, 0);
+	}
+	WfxRender::DrawSolidRect(hdc, rcPaint, clrBk, NULL);
+	WfxRender::DrawText(hdc, rcPaint, strDraw, clrText, dwFormat | DT_NOPREFIX);
+	std::wstring strLine;
+	strLine.assign(strDraw.size(), L'_');
+	WfxRender::DrawText(hdc, rcPaint, strLine, clrText, dwFormat);
+	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
+}
+
+void WfxRender::DrawLayerCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const std::wstring& strText, COLORREF clrText, DWORD dwFormat )
+{
+	std::wstring str(L"+");
+
+	if (dwState & WCS_EXPAND)
+	{
+		str = L"-";
+	}
+	
+	WfxRender::DrawText(hdc, rcPaint, str, RGB(255, 255, 255), dwFormat);
+	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
+}
+
+
 
 
 BEGIN_NAMESPACE_WFX

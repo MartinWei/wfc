@@ -440,19 +440,19 @@ LRESULT Widget::OnScrollBarOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	pScrollBar->GetScrollInfo(psinfo.get());
 
 	TRACE(L"nPos = %d", psinfo->nPos);
-	LONG nOffset = 0;
+	float fOffset = 0;
 	RECT rcDraw = GetDrawRect();
 	if (wParam == SB_HORZ)
 	{
-		nOffset = (rcDraw.right - rcDraw.left) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
-		nOffset *= m_szVirtual.cx / (m_rcDraw.right - m_rcDraw.left);
-		SetHOffset(nOffset);
+		fOffset = (rcDraw.right - rcDraw.left) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
+		fOffset *= (float)m_szVirtual.cx / (float)(m_rcDraw.right - m_rcDraw.left);
+		SetHOffset(fOffset);
 	}
 	else
 	{
-		nOffset = (rcDraw.bottom - rcDraw.top) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
-		nOffset *= m_szVirtual.cy / (m_rcDraw.bottom - m_rcDraw.top);
-		SetVOffset(nOffset);
+		fOffset = (rcDraw.bottom - rcDraw.top) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
+		fOffset *= (float)m_szVirtual.cy / (float)(m_rcDraw.bottom - m_rcDraw.top);
+		SetVOffset(fOffset);
 	}
 	return 1;
 }
@@ -522,8 +522,8 @@ ScrollBar::ScrollBar( int nBar )
 {
 	memset(m_pScrollInfo.get(), 0, sizeof(SCROLLINFO));
 	m_pScrollInfo->cbSize = sizeof(SCROLLINFO);
-	m_pScrollInfo->nMax = 100;
-	m_pScrollInfo->nMin = 0;
+	m_pScrollInfo->nMax = 10000;
+	m_pScrollInfo->nMin = 69;
 	m_ptLButtonDown.x = -1;
 	m_ptLButtonDown.y = -1;
 }

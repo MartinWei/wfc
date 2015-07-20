@@ -38,6 +38,7 @@ class Window;
 	class InPlaceWnd;
 		class EditWnd;
 		class ComboWnd;
+		class Menu;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -634,6 +635,11 @@ protected:
 };
 
 class WFX_API ToolTipWnd : public Window
+{
+
+};
+
+class WFX_API Menu : public InPlaceWnd
 {
 
 };

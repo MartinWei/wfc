@@ -69,6 +69,10 @@ public:
 	static void GenerateClip(HDC hdc, const RECT& rcItem, RenderClip& clip);
 	static void DrawHeadCell(HDC hdc, const RECT& rcPaint,  DWORD dwState,
 		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+	static void DrawLinkCell(HDC hdc, const RECT& rcPaint, DWORD dwState,
+		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+	static void DrawLayerCell(HDC hdc, const RECT& rcPaint, DWORD dwState,
+		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
 	static SIZE EstimateWidgetSize(const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch = NULL);
 };
 
