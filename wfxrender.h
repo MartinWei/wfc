@@ -62,6 +62,9 @@ public:
 	static void DrawLayerCell(HDC hdc, const RECT& rcPaint, DWORD dwState,
 		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
 	static SIZE EstimateWidgetSize(const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch = NULL);
+	static HFONT GetFontObject();
+protected:
+	static HFONT s_hFont;
 };
 
 END_NAMESPACE_WFX

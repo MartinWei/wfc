@@ -14,3 +14,4 @@
 #include "wfxwid.h"
 #include "wfxrender.h"
 #include "wfxcmn.h"
+#include "wfxlayout.h"

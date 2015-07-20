@@ -118,9 +118,14 @@ void WfxRender::DrawText( HDC hdc, const RECT& rcPaint, const std::wstring& strT
 	ASSERT(::GetObjectType(hdc)==OBJ_DC || ::GetObjectType(hdc)==OBJ_MEMDC);
 	::SetBkMode(hdc, TRANSPARENT);
 	::SetTextColor(hdc, clr);
+	HGDIOBJ hOldFont = NULL;
 	if (hFont != NULL)
-		::SelectObject(hdc, hFont);
+		hOldFont = ::SelectObject(hdc, hFont);
+	else
+		hOldFont = ::SelectObject(hdc, GetFontObject());
+	std::wstring strTest(L"woqu");
 	::DrawTextW(hdc, strText.c_str(), strText.size(), (LPRECT)&rcPaint, dwFormat);
+	::SelectObject(hdc, hOldFont);
 }
 
 void WfxRender::DrawCheckBox( HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
@@ -240,6 +245,22 @@ void WfxRender::DrawLayerCell( HDC hdc, const RECT& rcPaint, DWORD dwState, cons
 	WfxRender::DrawText(hdc, rcPaint, str, RGB(255, 255, 255), dwFormat);
 	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
 }
+
+HFONT WfxRender::GetFontObject()
+{
+	if (s_hFont != NULL)
+	{
+		LOGFONTW lf = {0};
+		wsprintfW(lf.lfFaceName, L"%s", L"System");
+		lf.lfWidth = 400;
+		s_hFont = ::CreateFontIndirectW(&lf);
+	}
+	return s_hFont;
+}
+
+
+HFONT WfxRender::s_hFont = NULL;
+
 
 WfxRender::RenderClip::~RenderClip()
 {

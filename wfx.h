@@ -86,7 +86,6 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WESB_HORZ   0x0010
 #define WESB_BOTH   (WESB_VERT | WESB_HORZ)
 
-
 #define WID_DEFAULT_TEXT	L""
 // State
 #define WID_STATE_STATIC	0

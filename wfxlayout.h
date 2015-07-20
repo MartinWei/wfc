@@ -37,5 +37,4 @@ class WFX_API Grid : public Widget
 
 };
 
-
 END_NAMESPACE_WFX
