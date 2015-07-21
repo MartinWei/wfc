@@ -62,7 +62,6 @@ class WFX_API Widget :
 public:
 	Widget(void);
 	virtual ~Widget(void);
-
 	operator HWID() const;
 
 public:
@@ -105,14 +104,12 @@ public:
 	// Generation
 	Widget* GetParent() const;
 	void SetParent(Widget* pParent);
-
 	// For WidDispatch
 protected:
 	void SetMyParent(Widget* pParent);
 	ULONG GetChildren(std::vector<Widget*>& rgpChildren) const;
 	ULONG GetChildren() const;
 	BOOL HasChild() const;
-
 protected:
 	ULONG AddChild(Widget* pWid);
 	ULONG RemoveChild(Widget* pWid);
@@ -125,7 +122,6 @@ protected:
 protected:
 	void SetHwid(HWID hWid);
 	HWID GetHwid() const;
-
 	// Scrollbar
 public:
 	void EnableScrollBar(UINT nBar, BOOL bEnable = TRUE);
@@ -137,7 +133,6 @@ public:
 protected:
 	void SetScrollBar(int nBar, ScrollBar* pScrollBar);
 	ScrollBar* GetScrollBar(int nBar) const;
-
 	// Text
 public:
 	void SetText(const std::wstring& strText);
@@ -148,11 +143,6 @@ public:
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	UINT_PTR SetWidTimer(UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
 	BOOL KillWidTimer(UINT_PTR uIDEvent);
-
-public:
-	void SetState(WORD wState);
-	WORD GetState() const;
-
 public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -188,17 +178,19 @@ public:
 	LONG GetHOffset() const;
 	void SetHOffset(LONG nOffset);
 	SIZE GetVirtualSize() const;
-
+public:
+	UINT GetID() const;
+	void SetID(UINT nID);
 public:
 	void SetVirtualSizeValid(BOOL bValid = TRUE);
 protected:
 	virtual SIZE EstimateVirualSize();
-
+	void SetState(WORD wState);
+	WORD GetState() const;
 	// Identifier
 public:
 	HWID m_hWid;
 	WidDispatch* m_pDispatch;
-
 protected:
 	std::wstring m_strText;
 	DWORD m_dwFormat;
@@ -206,18 +198,15 @@ protected:
 	COLORREF m_clrBkgnd;
 	COLORREF m_clrFrame;
 	COLORREF m_clrText;
-
 private:
 	// Position
 	RECT m_rcDraw;
 	RECT m_rcWid;
 	BOOL m_bNC;
 	WORD m_wShow;
-
 	// Generation
 	Widget* m_pParent;
 	std::vector<Widget*> m_rgpChildren;
-
 	// Scrollbar
 	ScrollBar* m_pHScrollbar;
 	ScrollBar* m_pVScrollbar;
@@ -226,13 +215,13 @@ private:
 	LONG m_nVertPosOffset;
 	// Timers need to be killed.
 	std::vector<UINT_PTR> m_rgTimer;
-
 	// Size
 	SIZE m_szVirtual;
 	BOOL m_bVirtualSizeValid;
-
 	// State
 	WORD m_wState;
+	// Event ID
+	UINT m_nID;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -359,15 +348,12 @@ public:
 	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 
 	WFX_BEGIN_MSG_MAP(Button)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		WFX_MESSAGE_HANDLER(WUM_LBUTTONCLICK, OnLButtonClik)
 		WFX_MESSAGE_HANDLER(WM_UPDATEUISTATE, OnStateChanged)
 		WFX_CHAIN_MSG_MAP(ImageWid)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
-		BOOL& bHandled);
-	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT OnLButtonClik(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 	wfx_msg LRESULT OnStateChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
@@ -429,8 +415,6 @@ class WFX_API RadioButtonItem : public CheckBoxItem
 {
 public:
 	virtual void OnDraw(HDC hdc, const RECT& rc);
-public:
-	static BOOL DrawRadioButtonItem(Widget* pWid, Gdiplus::Graphics& grph);
 };
 
 class WFX_API RadioButton : public CheckBox
@@ -456,11 +440,11 @@ public:
 	virtual ~InPlaceWid();
 public:
 	WFX_BEGIN_MSG_MAP(InPlaceWid)
-		WFX_MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+		WFX_MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
 		WFX_CHAIN_MSG_MAP(Widget)
 	WFX_END_MSG_MAP()
 public:
-	wfx_msg LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam,
+	wfx_msg LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
 	virtual BOOL Initial() = 0;
@@ -473,12 +457,24 @@ class WFX_API TextBox : public InPlaceWid
 public:
 	TextBox(WORD wMode = WID_TBM_READWRITE);
 public:
+	WFX_BEGIN_MSG_MAP(TextBox)
+		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+		//WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+		WFX_CHAIN_MSG_MAP(InPlaceWid)
+	WFX_END_MSG_MAP()
+public:
+	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, 
+		BOOL& bHandled);
+public:
 	void SetMode(WORD wMode, BOOL bAdd = FALSE);
 	WORD GetMode() const;
 	BOOL IsReadonly() const;
 	BOOL IsPassword() const;
 protected:
 	virtual BOOL Initial();
+	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 protected:
 	WORD m_wMode;
 	BOOL m_bEditting;
@@ -578,6 +574,7 @@ class WFX_API TextBoxWnd : public InPlaceWnd
 public:
 	WFX_BEGIN_MSG_MAP(TextBoxWnd)
 		WFX_MESSAGE_HANDLER(OCM_COMMAND, OnEditChanged)
+		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		WFX_CHAIN_MSG_MAP(InPlaceWnd)
 	WFX_END_MSG_MAP()
 public:
@@ -586,7 +583,10 @@ public:
 	virtual LPCTSTR GetSuperClassName() const;
 	virtual LPCTSTR GetWindowClassName() const;
 public:
-	wfx_msg LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	wfx_msg LRESULT OnEditChanged(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
+	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		BOOL& bHandled);
 };
 
 class WFX_API ComboWnd : public InPlaceWnd
@@ -664,6 +664,7 @@ protected:
 	UINT_PTR m_nTimerID;
 };
 
+typedef SharedPtr<Timer> PTimer;
 //////////////////////////////////////////////////////////////////////////
 // WidDispatch: dispatch messages for widget
 class WFX_API WidDispatch
@@ -702,6 +703,7 @@ public:
 	Widget* FromHwid(HWID hWid) const;
 	void SetCapture(Widget* pWid);
 	void SetFocus(Widget* pWid);
+	void SetLButtonDown(Widget* pWid);
 	void ReleaseCapture();
 public:
 	void EnableScrollBar(Widget* pWid, UINT uBarFlag, BOOL bEnable = TRUE);
@@ -723,7 +725,8 @@ protected:
 	std::pair<HWID, Widget*> m_h2oLastMouseMove;
 	std::pair<HWID, Widget*> m_h2oCaptured;
 	std::pair<HWID, Widget*> m_h2oFocused;
-	SharedPtr<Timer> m_pTimer;
+	std::pair<HWID, Widget*> m_h2oLButtonDown;
+	PTimer m_pTimer;
 public:
 	static HWID s_hWidBase;
 private:

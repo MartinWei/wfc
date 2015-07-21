@@ -22,57 +22,6 @@ void RadioButtonItem::OnDraw( HDC hdc, const RECT& rcPaint )
 	{
 		return;
 	}
-	//DrawRadioButtonItem(this, grph);
-}
-
-BOOL RadioButtonItem::DrawRadioButtonItem( Widget* pWid, Gdiplus::Graphics& grph )
-{
-	return FALSE;
-	/*Button* pButton = dynamic_cast<Button*>(pWid);
-	if (pButton == NULL)
-	{
-		return FALSE;
-	}
-
-	BOOL bChecked = pButton->IsCheck();
-	RECT rc;
-	;
-	RECT rcIn = rc;
-	rcIn.X += 2 * WID_CKB_MARGIN;
-	rcIn.Y += 2 * WID_CKB_MARGIN;
-	rcIn.Width -= 4 * WID_CKB_MARGIN;
-	rcIn.Height -= 4 * WID_CKB_MARGIN;
-	RECT rcCheck = rcIn;
-	rcCheck.X += WID_CKB_MARGIN;
-	rcCheck.Y += WID_CKB_MARGIN;
-	rcCheck.Width -= 2 * WID_CKB_MARGIN;
-	rcCheck.Height -= 2 * WID_CKB_MARGIN;
-	Gdiplus::Color clr;
-	clr.SetFromCOLORREF(WID_CKB_BKGND);
-	Gdiplus::SolidBrush brsh(clr);
-
-	clr.SetFromCOLORREF(WID_CKB_FRAMEO);
-	Gdiplus::Pen pn(clr);
-	Gdiplus::GraphicsPath path;
-	path.AddArc(rc, 0, 360);
-	grph.DrawPath(&pn, &path);
-
-	clr.SetFromCOLORREF(WID_CKB_FRAMEI);
-	pn.SetColor(clr);
-	path.Reset();
-	path.AddArc(rcIn, 0, 360);
-	grph.DrawPath(&pn, &path);
-
-	if (bChecked)
-	{
-		path.Reset();
-		path.AddArc(rcIn, 0, 360);
-		clr.SetFromCOLORREF(WID_RB_CHECK);
-		brsh.SetColor(clr);
-		grph.FillPath(&brsh, &path);
-	}
-
-	return TRUE;*/
 }
 
 RadioButton::RadioButton()

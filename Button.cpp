@@ -39,26 +39,6 @@ void Button::OnDraw( HDC hdc, const RECT& rcPaint )
 
 }
 
-LRESULT Button::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	m_bLButtonDown = TRUE;
-	return 0;
-}
-
-LRESULT Button::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	if (m_bLButtonDown)
-	{
-		m_bChecked = !m_bChecked;
-		if (m_bChecked)
-		{
-			SetState(WID_STATE_CHECKED);
-		}
-	}
-	m_bLButtonDown = FALSE;
-	return 0;
-}
-
 void Button::Check( BOOL bCheck /*= TRUE*/ )
 {
 	m_bChecked = bCheck;
@@ -67,6 +47,13 @@ void Button::Check( BOOL bCheck /*= TRUE*/ )
 BOOL Button::IsCheck() const
 {
 	return m_bChecked;
+}
+
+LRESULT Button::OnLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	SendParentMessage(WM_COMMAND, MAKELONG(GetID(), BN_CLICKED), (LPARAM)GetHwid());
+	InvalidWid();
+	return 1;
 }
 
 LRESULT Button::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
@@ -79,5 +66,6 @@ LRESULT Button::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 		InvalidWid();
 		return 0;
 	}
-	return __super::OnStateChanged(uMsg, wParam, lParam, bHandled);
+	InvalidWid();
+	return 1;
 }

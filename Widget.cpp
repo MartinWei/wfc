@@ -38,6 +38,7 @@ Widget::Widget(void)
 , m_nHorzPosOffset(0)
 , m_nVertPosOffset(0)
 , m_bVirtualSizeValid(FALSE)
+, m_nID(0)
 {
 	m_pFont.reset(new LOGFONTW);
 	memset(&m_rcWid, 0, sizeof(RECT));
@@ -285,7 +286,7 @@ LRESULT Widget::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT Widget::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	switch(m_wState)
+	switch(wParam)
 	{
 	case WID_STATE_MOUSE:
 		{
@@ -307,7 +308,7 @@ LRESULT Widget::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 			
 		}
 	}
-	InvalidWid();
+	//InvalidWid();
 	return 0;
 }
 
@@ -465,7 +466,7 @@ LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 HFONT Widget::GetFontObject() const
 {
-	return NULL;
+	return WfxRender::GetFontObject();
 }
 
 LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
@@ -508,6 +509,16 @@ void Widget::SetHOffset( LONG nOffset )
 SIZE Widget::GetVirtualSize() const
 {
 	return m_szVirtual;
+}
+
+UINT Widget::GetID() const
+{
+	return m_nID;
+}
+
+void Widget::SetID( UINT nID )
+{
+	m_nID = nID;
 }
 
 ScrollBar::ScrollBar( int nBar )
@@ -1064,13 +1075,11 @@ InPlaceWid::~InPlaceWid()
 
 }
 
-LRESULT InPlaceWid::OnLButtonDown( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+LRESULT InPlaceWid::OnSetFocus( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	if (Initial())
 	{
-		ASSERT(m_pDispatch != NULL);
-		m_pDispatch->HandleMessage(WM_LBUTTONUP, 0, 0);
 		return 0;
 	}
-	return __super::OnLButtonDown(uMsg, wParam, lParam, bHandled);
+	return 1;
 }

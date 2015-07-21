@@ -94,15 +94,15 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_STATE_CHECKED	3
 
 // Widget State Color
-#define WID_BKGND_STATIC	RGB(0, 0, 0)
+#define WID_BKGND_STATIC	RGB(255, 255, 255)
 #define WID_BKGND_MOUSE		RGB(60, 60, 60)
 #define WID_BKGND_PUSH		RGB(179, 224, 249)
 #define WID_BKGND_CHECKED	RGB(201, 234, 252)
 
 #define WID_FRAME_STATIC	RGB(100, 100, 100)
-#define WID_FRAME_MOUSE		RGB(90, 90, 90)
-#define WID_FRAME_PUSH		RGB(190, 190, 190)
-#define WID_FRAME_CHECKED	RGB(45, 212, 255)
+#define WID_FRAME_MOUSE		RGB(77, 137, 193)
+#define WID_FRAME_PUSH		RGB(77, 137, 193)
+#define WID_FRAME_CHECKED	RGB(77, 137, 193)
 
 #define WID_TEXT_STATIC		RGB(180, 180, 180)
 #define WID_TEXT_MOUSE		RGB(180, 180, 180)
@@ -119,15 +119,20 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WID_FSIZE_PUSH		10
 #define WID_FSIZE_CHECKED	10
 
-#define WBTN_BKGND_STATIC	RGB(30, 30, 30)
-#define WBTN_BKGND_MOUSE	RGB(40, 40, 40)
-#define WBTN_BKGND_PUSH		WBTN_BKGND_MOUSE
-#define WBTN_BKGND_CHECKED	RGB(60, 60, 60)
+#define WBTN_BKGND_STATIC	RGB(255, 255, 255)
+#define WBTN_BKGND_MOUSE	RGB(77, 137, 193)
+#define WBTN_BKGND_PUSH		RGB(77, 137, 193)
+#define WBTN_BKGND_CHECKED	RGB(77, 137, 193)
 
-#define WBTN_FRAME_STATIC	RGB(45, 45, 45)
-#define WBTN_FRAME_MOUSE	RGB(75, 75, 75)
-#define WBTN_FRAME_PUSH		WBTN_FRAME_MOUSE
-#define WBTN_FRAME_CHECKED	WBTN_FRAME_STATIC
+#define WBTN_FRAME_STATIC	RGB(77, 137, 193)
+#define WBTN_FRAME_MOUSE	RGB(77, 137, 193)
+#define WBTN_FRAME_PUSH		RGB(77, 137, 193)
+#define WBTN_FRAME_CHECKED	RGB(77, 137, 193)
+
+#define WTXB_BKGND_STATIC	RGB(255, 255, 255)
+#define WTXB_BKGND_MOUSE	WTXB_BKGND_STATIC
+#define WTXB_BKGND_PUSH		WTXB_BKGND_STATIC
+#define WTXB_BKGND_CHECKED	WTXB_BKGND_STATIC
 
 // check box color
 #define WCKB_BKGND_STATIC	RGB(244, 244, 244)
@@ -169,6 +174,7 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 enum Wfx_Msg
 {
 	WUM_BEGIN = WM_USER + 500,
+	WUM_LBUTTONCLICK,
 	WUM_SET_HOFFSET,
 	WUM_SET_VOFFSET,
 	WUM_QUERY_VIRTUAL_SIZE,
@@ -216,6 +222,17 @@ enum Wfx_LC_Param
 	return TRUE; \
 }
 
+#define WFX_COMMAND_HANDLER(id, code, func) \
+	if (uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
+	{\
+		bHandled = TRUE; \
+		lResult = func(HIWORD(wParam), LOWORD(wParam), lParam, bHandled); \
+		if (bHandled)\
+		{\
+			return TRUE;\
+		}\
+	}
+
 #define WFX_CHAIN_MSG_MAP(theChainClass) \
 { \
 	if(theChainClass::ProcessMessage(uMsg, wParam, lParam, lResult, dwMsgMapID)) \
@@ -245,5 +262,13 @@ typedef SharedPtr<Gdiplus::StringFormat>	WfxFormatPtr;
 typedef SharedPtr<Gdiplus::Font>			WfxFontPtr;
 
 WFX_API std::wstring StrFormat(const wchar_t* pstrFormat, ...);
+
+enum Wid_Type
+{
+	WT_WIDGET,
+	WT_BUTTON,
+	WT_TEXTBOX,
+
+};
 
 END_NAMESPACE_WFX

@@ -47,6 +47,7 @@ public:
 
 	static void DrawWidget(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void DrawButtton(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
+	static void DrawTextBox(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WORD wMode, WidDispatch* pDispatch = NULL);
 	static void DrawCheckBox(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void DrawRadioBox(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void DrawSolidRect(HDC hdc, const RECT& rcPaint, COLORREF clr, WidDispatch* pDispatch = NULL);

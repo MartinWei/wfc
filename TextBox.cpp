@@ -11,6 +11,7 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
 
@@ -21,7 +22,7 @@ HWND TextBoxWnd::CreateInPlaceWindow()
 	ASSERT(pTextBox->m_pDispatch != NULL);
 	RECT rcWid = pTextBox->GetRect();
 	RECT rc = rcWid;
-	::InflateRect(&rc, -1, -1);
+	::InflateRect(&rc, -1, -3);
 	Create(m_pOwner->m_pDispatch->GetHwnd(),
 		NULL, WS_CHILD, ES_AUTOHSCROLL, rc);
 	SetFont(m_pOwner->GetFontObject());
@@ -64,6 +65,17 @@ LRESULT TextBoxWnd::OnEditChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	return 0;
 }
 
+LRESULT TextBoxWnd::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	bHandled = FALSE;
+	if (m_pOwner != NULL)
+	{
+		m_pOwner->SendWidMessage(uMsg, wParam, lParam);
+	}
+	return 1;
+}
+
+
 void TextBoxWnd::OnInPlaceWindowKillFocus()
 {
 	if (m_pOwner == NULL)
@@ -90,6 +102,22 @@ BOOL TextBox::Initial()
 	m_pWindow = new TextBoxWnd;
 	m_pWindow->Initial(this);
 	return FALSE;
+}
+
+void TextBox::OnDraw(HDC hdc, const RECT& rcPaint)
+{
+	WfxRender::DrawTextBox(hdc, GetText(), GetRect(), GetState(), GetMode(), m_pDispatch);
+}
+
+LRESULT TextBox::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	::SetCursor(::LoadCursor(NULL, MAKEINTRESOURCE(IDC_IBEAM)));
+	return __super::OnMouseMove(uMsg, wParam, lParam, bHandled);
+}
+
+LRESULT TextBox::OnMouseLeave( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	return 1;
 }
 
 void TextBox::SetMode( WORD wMode, BOOL bAdd /*= FALSE*/ )

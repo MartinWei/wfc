@@ -62,28 +62,33 @@ void WfxRender::DrawButtton( HDC hdc, const std::wstring& strText, const RECT& r
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
+	COLORREF clrText = WID_TEXT_STATIC;
 	switch(wState)
 	{
 	case WID_STATE_STATIC:
 		clrBk = WID_BKGND_STATIC;
 		clrFrm = WBTN_FRAME_STATIC;
+		clrText = WID_TEXT_STATIC;
 		break;
 	case WID_STATE_MOUSE:
 		clrBk = WBTN_BKGND_MOUSE;
 		clrFrm = WBTN_FRAME_MOUSE;
+		clrText = WID_TEXT_MOUSE;
 		break;
 	case WID_STATE_PUSH:
 		clrBk = WBTN_BKGND_PUSH;
 		clrFrm = WBTN_FRAME_PUSH;
+		clrText = WID_TEXT_PUSH;
 		break;
 	case WID_STATE_CHECKED:
 		clrBk = WBTN_BKGND_CHECKED;
 		clrFrm = WBTN_FRAME_CHECKED;
+		clrText = WID_STATE_CHECKED;
 		break;
 	}
 	DrawSolidRect(hdc, rc, clrBk, pDispatch);
 	DrawFrame(hdc, rc, clrFrm, pDispatch);
-	DrawText(hdc, rc, strText, clrFrm, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+	DrawText(hdc, rc, strText, clrText, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
 }
 
 
@@ -253,10 +258,47 @@ HFONT WfxRender::GetFontObject()
 		LOGFONTW lf = {0};
 		wsprintfW(lf.lfFaceName, L"%s", L"System");
 		lf.lfWidth = 400;
+		lf.lfHeight = 30;
 		s_hFont = ::CreateFontIndirectW(&lf);
 	}
 	return s_hFont;
 }
+
+void WfxRender::DrawTextBox( HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WORD wMode, WidDispatch* pDispatch /*= NULL*/ )
+{
+	COLORREF clrBk = WTXB_BKGND_STATIC;
+	COLORREF clrFrm = WBTN_FRAME_STATIC;
+	COLORREF clrText = WID_TEXT_STATIC;
+	switch(wState)
+	{
+	case WID_STATE_STATIC:
+		clrBk = WTXB_BKGND_STATIC;
+		clrFrm = WBTN_FRAME_STATIC;
+		clrText = WID_TEXT_STATIC;
+		break;
+	case WID_STATE_MOUSE:
+		clrBk = WTXB_BKGND_MOUSE;
+		clrFrm = WBTN_FRAME_MOUSE;
+		clrText = WID_TEXT_MOUSE;
+		break;
+	case WID_STATE_PUSH:
+		clrBk = WTXB_BKGND_PUSH;
+		clrFrm = WBTN_FRAME_PUSH;
+		clrText = WID_TEXT_PUSH;
+		break;
+	case WID_STATE_CHECKED:
+		clrBk = WTXB_BKGND_CHECKED;
+		clrFrm = WBTN_FRAME_CHECKED;
+		clrText = WID_STATE_CHECKED;
+		break;
+	}
+	DrawSolidRect(hdc, rc, clrBk, pDispatch);
+	DrawFrame(hdc, rc, clrFrm, pDispatch);
+	RECT rcText = rc;
+	::InflateRect(&rcText, -1, -1);
+	DrawText(hdc, rcText, strText, clrText, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+}
+
 
 
 HFONT WfxRender::s_hFont = NULL;

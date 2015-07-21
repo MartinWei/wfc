@@ -17,13 +17,13 @@ USING_NAMESPACE_WFX;
 HWID WidDispatch::s_hWidBase = INVALID_HWID;
 
 HINSTANCE WidDispatch::s_hInstance = NULL;
-
 WidDispatch::WidDispatch( HWND hWnd /*= NULL*/ )
 : m_hWnd(hWnd)
 {
 	ClearH2O(m_h2oLastMouseMove);
 	ClearH2O(m_h2oCaptured);
 	ClearH2O(m_h2oFocused);
+	ClearH2O(m_h2oLButtonDown);
 	m_pTimer.reset(new Timer(this));
 }
 
@@ -213,9 +213,26 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			pWid = GetWidPt(pt);
 			if (pWid != NULL)
 			{
+				if (pWid->GetHwid() != m_h2oFocused.first
+					&& pWid != m_h2oFocused.second)
+				{
+					if (m_h2oFocused.second != NULL)
+					{
+						m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, (WPARAM)pWid->GetHwid());
+					}
+					pWid->SendWidMessage(WM_SETFOCUS, (WPARAM)m_h2oFocused.first);
+				}
 				SetCapture(pWid);
 				SetFocus(pWid);
+				SetLButtonDown(pWid);
 				lResult = pWid->SendWidMessage(uMsg, wParam, lParam);
+			}
+			else
+			{
+				if (m_h2oFocused.second != NULL)
+				{
+					m_h2oFocused.second->SendWidMessage(WM_KILLFOCUS, INVALID_HWID);
+				}
 			}
 		}
 		break;
@@ -223,7 +240,9 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 		{
 			pWid = GetObject(m_h2oCaptured);
 			if (pWid == NULL)
+			{
 				pWid = GetWidPt(pt);
+			}
 			if (m_h2oCaptured.first != INVALID_HWID)
 			{
 				ReleaseCapture();
@@ -239,6 +258,14 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 				}
 				ClearH2O(m_h2oLastMouseMove);
 			}
+			pWid = GetWidPt(pt);
+			if (pWid != NULL
+				&& m_h2oLButtonDown.first == pWid->GetHwid()
+				&& m_h2oLButtonDown.second == pWid)
+			{
+				pWid->SendWidMessage(WUM_LBUTTONCLICK, wParam, lParam);
+			}
+			ClearH2O(m_h2oLButtonDown);
 		}
 		break;
 	case WM_TIMER:
@@ -261,6 +288,16 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			}
 		}
 		break;
+	case WM_COMMAND:
+		{
+			if (lParam == 0)
+			{
+				break;
+			}
+			HWND hWndChild = (HWND)lParam;
+			lResult = ::SendMessageW(hWndChild, OCM__BASE + uMsg, wParam, lParam);
+			break;
+		}
 	default:
 		lResult = 0;
 	}
@@ -414,6 +451,13 @@ void WidDispatch::SetFocus(Widget* pWid)
 	m_h2oFocused = std::make_pair(pWid->GetHwid(), pWid);
 }
 
+void WidDispatch::SetLButtonDown(Widget* pWid)
+{
+	ASSERT(m_hWnd != NULL);
+	ASSERT(pWid != NULL);
+	ASSERT(*pWid != INVALID_HWID);
+	m_h2oLButtonDown = std::make_pair(pWid->GetHwid(), pWid);
+}
 void WidDispatch::ReleaseCapture()
 {
 	ClearH2O(m_h2oCaptured);
