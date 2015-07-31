@@ -50,6 +50,42 @@ DECLARE_HANDLE	(HWID);
 #define SharedPtr  std::tr1::shared_ptr
 #define WeakPtr	   std::tr1::weak_ptr
 
+BEGIN_NAMESPACE_WFX
+
+class WFX_API String : public std::wstring
+{
+public:
+	String();
+	String(const wchar_t* psz);
+	String(const String& rh);
+	String& operator=(const String& rh);
+public:
+	void Format(const wchar_t* pszFormat, ...);
+protected:
+	void FormatV(const wchar_t* pszFormat, va_list args);
+public:
+	static int GetFormattedLength(const wchar_t* pszFormat, va_list args);
+	static int Format(wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args);
+};
+
+template<class T>
+class Factory
+{
+public:
+	SharedPtr<T> CreateObject()
+	{
+		return SharedPtr<T>(new T());
+	}
+};
+
+#define WFX_DECLARE_FACTORY(classname) \
+	friend class Factory<classname>;
+
+#define WFX_OBJECT_FACTORY(classname) \
+	SharedPtr<Factory<classname> >(new Factory<classname>())
+
+END_NAMESPACE_WFX
+
 #ifdef _DEBUG
 #ifndef TRACE
 #define TRACE __Trace
@@ -139,6 +175,8 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 #define WCKB_BKGND_MOUSE	RGB(142, 143, 143)
 #define WCKB_BKGND_PUSH		RGB(202, 207, 212)
 #define WCKB_BKGND_CHECKED	RGB(49, 52, 124)
+#define WCKB_ITEM_BKGND		RGB()
+#define WCKB_ITEM_MARK		RGB()
 // check box size
 #define WID_CKB_MARGIN		1
 #define WID_CKB_SIZE		13
@@ -156,7 +194,7 @@ void WFX_API __Trace(const wchar_t* pstrFormat, ...);
 
 #define WCELL_BKGRND		WID_BKGND_STATIC
 #define WCELL_FRAME			WID_FRAME_STATIC
-#define WCELL_SELECTED		RGB(255, 255, 255)
+#define WCELL_SELECTED		WBTN_BKGND_MOUSE
 
 // Cell State
 #define WCS_NORMAL			0x00000000
@@ -257,11 +295,9 @@ enum Wfx_LC_Param
 
 BEGIN_NAMESPACE_WFX
 
-typedef SharedPtr<Gdiplus::Image>			WfxImagePtr;
-typedef SharedPtr<Gdiplus::StringFormat>	WfxFormatPtr;
-typedef SharedPtr<Gdiplus::Font>			WfxFontPtr;
-
-WFX_API std::wstring StrFormat(const wchar_t* pstrFormat, ...);
+typedef SharedPtr<Gdiplus::Image>				PImage;
+typedef SharedPtr<Gdiplus::StringFormat>		PStringFormat;
+typedef SharedPtr<Gdiplus::Font>				PFont;
 
 enum Wid_Type
 {

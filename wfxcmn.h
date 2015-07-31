@@ -22,8 +22,8 @@ class TNode;
 struct WFX_API HeaderInfo
 {
 	ULONG						cx;
-	std::wstring				strText;
-	WfxImagePtr					pImage;
+	String						strText;
+	PImage						pImage;
 	DWORD						dwFormat;
 	ULONG						nOrder;
 	DWORD						dwState;
@@ -39,7 +39,7 @@ struct WFX_API HeaderInfo
 	{
 		memset(&rcPos, 0, sizeof(RECT));
 	}
-	void SetImage(const std::wstring& strFile)
+	void SetImage(const String& strFile)
 	{
 		pImage.reset(Gdiplus::Image::FromFile(strFile.c_str()));
 	}
@@ -100,7 +100,7 @@ public:
 		BOOL& bHandled);
 public:
 	virtual void Draw(HDC hdc,const RECT& rcPaint, DWORD dwState,
-		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+		const String& strText, COLORREF clrText, DWORD dwFormat);
 public:
 	void SetParent(Widget* pParent);
 	void SetRect(const RECT& rc);
@@ -113,7 +113,7 @@ class WFX_API LayerCell : public Cell
 {
 public:
 	virtual void Draw(HDC hdc,const RECT& rcPaint, DWORD dwState,
-		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+		const String& strText, COLORREF clrText, DWORD dwFormat);
 public:
 	WFX_BEGIN_MSG_MAP(LayerCell)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
@@ -190,6 +190,8 @@ public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
+	BOOL Verify() const;
+protected:
 	std::vector<SharedPtr<HeaderInfo> > m_rgpHdi;
 	RECT m_rgRowNumRect;
 	LONG m_nSelected;
@@ -215,6 +217,18 @@ public:
 class WFX_API VorticalLayerCtrl : public Widget
 {
 public:
+	struct CacheInfo
+	{
+		CacheInfo(ULONG nLayer = -1, BOOL bExpanded = TRUE)
+			: m_nLayer(nLayer)
+			, m_bExpanded(bExpanded)
+		{
+
+		}
+		ULONG m_nLayer;
+		BOOL m_bExpanded;
+	};
+public:
 	VorticalLayerCtrl();
 protected:
 	ULONG AddItem();
@@ -224,9 +238,11 @@ protected:
 	BOOL IsExpanded(ULONG nItem) const;
 	ULONG GetLayer(ULONG nItem) const;
 	ULONG GetTotalItems() const;
+	void RefreshCache();
 protected:
-	ULONG m_nTotalItems;
 	PTNode m_pRoot;
+	std::vector<CacheInfo> m_rgCacheInfo;
+	BOOL m_bCached;
 };
 
 class WFX_API ListCtrl : public VorticalLayerCtrl
@@ -292,9 +308,9 @@ public:
 	BOOL SetColumnWidth(ULONG nCol, ULONG cx);
 	ULONG GetRowHeight(ULONG nRow) const;
 	BOOL SetRowHeight(ULONG nRow, ULONG cy);
-	std::wstring GetItemText(ULONG nItem, ULONG nSubItem) const;
+	String GetItemText(ULONG nItem, ULONG nSubItem) const;
 	BOOL SetItemText(ULONG nItem, ULONG nSubItem, 
-		const std::wstring& strText);
+		const String& strText);
 public:
 	ULONG GetTotalRows() const;
 	ULONG GetTotalColumns() const;
@@ -316,9 +332,9 @@ public:
 	LONG GetEndCol() const;
 	void SetEndCol(LONG nCol);
 public:
-	ULONG AddColumn(const std::wstring& strName, 
+	ULONG AddColumn(const String& strName, 
 		UINT nWidth, DWORD dwFormat, ULONG nCellType, BOOL bAdjust = FALSE);
-	ULONG InsertColumn(ULONG nCol, const std::wstring& strName, 
+	ULONG InsertColumn(ULONG nCol, const String& strName, 
 		UINT nWidth, DWORD dwFormat, ULONG nCellType, BOOL bAdjust = FALSE);
 	ULONG AddRow(LONG nHeight = -1, BOOL bAdjust = FALSE);
 	ULONG InsertRow(ULONG nRow, LONG nHeight = -1, BOOL bAdjust = FALSE);
@@ -337,6 +353,7 @@ protected:
 	BOOL CalcRow();
 	void CalcCellRect();
 	BOOL CalcPos(int nBar, BOOL bFurther);
+	BOOL Verify() const;
 protected:
 	SharedPtr<HeaderCtrl> m_pHeadCtrl;
 	std::map<CellID, RECT> m_rgRect;
@@ -354,7 +371,6 @@ protected:
 	BOOL m_bHasSubItem;
 	std::vector<std::vector<RECT> > m_rgRectFast;
 };
-
 
 class WFX_API TreeCtrl : public VorticalLayerCtrl
 {

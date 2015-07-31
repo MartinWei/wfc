@@ -8,6 +8,7 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
+
 #pragma once
 #include "wfx.h"
 
@@ -135,8 +136,8 @@ protected:
 	ScrollBar* GetScrollBar(int nBar) const;
 	// Text
 public:
-	void SetText(const std::wstring& strText);
-	std::wstring GetText() const;
+	void SetText(const String& strText);
+	String GetText() const;
 	virtual HFONT GetFontObject() const;
 public:
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -178,21 +179,20 @@ public:
 	LONG GetHOffset() const;
 	void SetHOffset(LONG nOffset);
 	SIZE GetVirtualSize() const;
-public:
+	void SetState(WORD wState);
+	WORD GetState() const;
 	UINT GetID() const;
 	void SetID(UINT nID);
 public:
 	void SetVirtualSizeValid(BOOL bValid = TRUE);
 protected:
 	virtual SIZE EstimateVirualSize();
-	void SetState(WORD wState);
-	WORD GetState() const;
 	// Identifier
 public:
 	HWID m_hWid;
 	WidDispatch* m_pDispatch;
 protected:
-	std::wstring m_strText;
+	String m_strText;
 	DWORD m_dwFormat;
 	SharedPtr<LOGFONTW> m_pFont;
 	COLORREF m_clrBkgnd;
@@ -224,6 +224,8 @@ private:
 	UINT m_nID;
 };
 
+typedef SharedPtr<Widget> PWidget;
+
 //////////////////////////////////////////////////////////////////////////
 // Slider: for ScrollBar
 class WFX_API Slider : public Widget
@@ -253,6 +255,8 @@ protected:
 	POINT m_ptLButtonDown;
 	int m_nBar;
 };
+
+typedef SharedPtr<Slider> PSlider;
 
 //////////////////////////////////////////////////////////////////////////
 // ScrollBar: Common ScrollBar
@@ -310,21 +314,23 @@ protected:
 	SharedPtr<Widget> m_pSlider;
 };
 
+typedef SharedPtr<ScrollBar> PScrollBar;
+
 class WFX_API ImageWid : public Widget
 {
 public:
 	ImageWid();
-	ImageWid(const std::wstring& strStatic,
-		const std::wstring& strMouse, 
-		const std::wstring& strPush,
-		const std::wstring& strChecked);
+	ImageWid(const String& strStatic,
+		const String& strMouse, 
+		const String& strPush,
+		const String& strChecked);
 	virtual ~ImageWid();
 public:
-	void SetImage(WORD wState, const std::wstring& strImage);
-	void SetImage(const std::wstring& strStatic,
-		const std::wstring& strMouse, 
-		const std::wstring& strPush,
-		const std::wstring& strChecked);
+	void SetImage(WORD wState, const String& strImage);
+	void SetImage(const String& strStatic,
+		const String& strMouse, 
+		const String& strPush,
+		const String& strChecked);
 protected:
 	SharedPtr<Gdiplus::Image> GetImageFromState();
 protected:
@@ -334,22 +340,25 @@ protected:
 	SharedPtr<Gdiplus::Image> m_pChecked;
 };
 
+typedef SharedPtr<ImageWid> PImageWid;
+
 class WFX_API SplitterBar : public Widget
 {
 
 };
 
+typedef SharedPtr<SplitterBar> PSplitterBar;
+
 class WFX_API Button : public ImageWid
 {
 public:
-	Button(BOOL bCheckState = FALSE);
+	Button(BOOL m_bCheckable = FALSE);
 	virtual ~Button();
 public:
 	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 
 	WFX_BEGIN_MSG_MAP(Button)
 		WFX_MESSAGE_HANDLER(WUM_LBUTTONCLICK, OnLButtonClik)
-		WFX_MESSAGE_HANDLER(WM_UPDATEUISTATE, OnStateChanged)
 		WFX_CHAIN_MSG_MAP(ImageWid)
 	WFX_END_MSG_MAP()
 public:
@@ -359,19 +368,21 @@ public:
 		BOOL& bHandled);
 public:
 	void Check(BOOL bCheck = TRUE);
-	BOOL IsCheck() const;
+	BOOL IsChecked() const;
 protected:
 	BOOL m_bLButtonDown;
 	BOOL m_bChecked;
-	BOOL m_bCheckState;
+	BOOL m_bCheckable;
 };
+
+typedef SharedPtr<Button> PButton;
 
 class WFX_API CheckBoxItem : public Button
 {
 public:
 	CheckBoxItem();
-	CheckBoxItem(const std::wstring& strChecked,
-		const std::wstring& strUnCheck);
+	CheckBoxItem(const String& strChecked,
+		const String& strUnCheck);
 	virtual ~CheckBoxItem();
 public:
 	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
@@ -384,10 +395,14 @@ protected:
 	SharedPtr<Gdiplus::Image> m_pImageUnCheck;
 };
 
+typedef SharedPtr<CheckBoxItem> PCheckBoxItem;
+
 class WFX_API ToolTip : public Button
 {
 
 };
+
+typedef SharedPtr<ToolTip> PToolTip;
 
 class WFX_API CheckBox : public Widget
 {
@@ -408,8 +423,10 @@ public:
 	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
 protected:
 	ULONG m_lOffset;
-	SharedPtr<CheckBoxItem> m_pItem;
+	SharedPtr<Button> m_pItem;
 };
+
+typedef SharedPtr<CheckBox> PCheckBox;
 
 class WFX_API RadioButtonItem : public CheckBoxItem
 {
@@ -417,21 +434,39 @@ public:
 	virtual void OnDraw(HDC hdc, const RECT& rc);
 };
 
+typedef SharedPtr<RadioButtonItem> PRadioButtonItem;
+
 class WFX_API RadioButton : public CheckBox
 {
 public:
 	RadioButton();
 };
 
+typedef SharedPtr<RadioButton> PRadioButton;
+
 class WFX_API Label : public Widget
 {
 
 };
 
+typedef SharedPtr<Label> PLabel;
+
 class WFX_API ProcessBar : public Widget
 {
-
+public:
+	ProcessBar();
+public:
+	void SetRange(ULONG nMax);
+	void SetPos(ULONG nPos, BOOL bDraw = TRUE);
+	ULONG GetPos() const;
+public:
+	virtual void OnDraw(HDC hdc, const RECT& rc);
+protected:
+	ULONG m_nMax;
+	ULONG m_nPos;
 };
+
+typedef SharedPtr<ProcessBar> PProcessBar;
 
 class WFX_API InPlaceWid : public Widget
 {
@@ -451,6 +486,8 @@ protected:
 protected:
 	InPlaceWnd* m_pWindow;
 };
+
+typedef SharedPtr<InPlaceWid> PInPlaceWid;
 
 class WFX_API TextBox : public InPlaceWid
 {
@@ -480,6 +517,8 @@ protected:
 	BOOL m_bEditting;
 };
 
+typedef SharedPtr<TextBox> PTextBox;
+
 class WFX_API ComboBox : public InPlaceWid
 {
 public:
@@ -490,6 +529,8 @@ public:
 protected:
 	virtual BOOL Initial();
 };
+
+typedef SharedPtr<ComboBox> PComboBox;
 
 ////////////////////////////////////////////////////////////////////////
 // Window: Window for controls
@@ -519,8 +560,8 @@ public:
 	void Close();
 	void CenterWindow();
 	void SetIcon(UINT nRes);
-	std::wstring GetText() const;
-	void SetText(const std::wstring& strText);
+	String GetText() const;
+	void SetText(const String& strText);
 	void SetFont(HFONT hFont) const;
 	void GetClientRect(RECT& rc);
 	UINT_PTR SetTimer(UINT_PTR nIDEvent,
@@ -548,6 +589,8 @@ protected:
 	BOOL m_bSubclassed;
 };
 
+typedef SharedPtr<Window> PWindow;
+
 class WFX_API InPlaceWnd : public Window
 {
 public:
@@ -569,6 +612,8 @@ protected:
 	InPlaceWid* m_pOwner;
 };
 
+typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
+
 class WFX_API TextBoxWnd : public InPlaceWnd
 {
 public:
@@ -588,6 +633,8 @@ public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 };
+
+typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
 
 class WFX_API ComboWnd : public InPlaceWnd
 {
@@ -613,15 +660,21 @@ protected:
 	std::vector<Widget*> m_rgpItems;
 };
 
+typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
+
 class WFX_API ToolTipWnd : public Window
 {
 
 };
 
+typedef SharedPtr<ToolTipWnd> PToolTipWnd;
+
 class WFX_API Menu : public InPlaceWnd
 {
 
 };
+
+typedef SharedPtr<Menu> PMenu;
 
 //////////////////////////////////////////////////////////////////////////
 // Timer: helper class for WidDispatch
@@ -642,6 +695,7 @@ struct TimerInfo
 };
 
 typedef SharedPtr<TimerInfo> PTimerInfo;
+
 typedef std::vector<PTimerInfo>::iterator TimerIter;
 
 class Timer
@@ -667,13 +721,13 @@ protected:
 typedef SharedPtr<Timer> PTimer;
 //////////////////////////////////////////////////////////////////////////
 // WidDispatch: dispatch messages for widget
-class WFX_API WidDispatch
+class WFX_API WidDispatch : public WidgetBase
 {
 	friend class Widget;
 	friend class Timer;
 public:
 	WidDispatch(HWND hWnd = NULL);
-	~WidDispatch();
+	virtual ~WidDispatch();
 public:
 	void SetHwnd(HWND hWnd);
 	HWND GetHwnd() const;
@@ -698,6 +752,9 @@ protected:
 	void ShowWid(Widget* pWid, WORD wShow);
 public:
 	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		LRESULT& lResult, DWORD dwMsgMapID);
+public:
 	Widget* GetWidPt(POINT pt);
 	Widget* GetWidPt(const std::vector<Widget*>& rgpWid);
 	Widget* FromHwid(HWID hWid) const;
@@ -732,5 +789,7 @@ public:
 private:
 	static HINSTANCE s_hInstance;
 };
+
+typedef SharedPtr<WidDispatch> PWidDispatch;
 
 END_NAMESPACE_WFX

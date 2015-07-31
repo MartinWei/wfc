@@ -191,7 +191,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Doc.cpp"
+				RelativePath=".\DocManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Document.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Frame.cpp"
 				>
 			</File>
 			<File
@@ -285,19 +293,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\wfxapp.h"
-				>
-			</File>
-			<File
 				RelativePath=".\wfxcmn.h"
 				>
 			</File>
 			<File
-				RelativePath=".\wfxdoc.h"
-				>
-			</File>
-			<File
-				RelativePath=".\wfxframe.h"
+				RelativePath=".\wfxfrmwk.h"
 				>
 			</File>
 			<File
@@ -310,10 +310,6 @@
 			</File>
 			<File
 				RelativePath=".\wfxrender.h"
-				>
-			</File>
-			<File
-				RelativePath=".\wfxview.h"
 				>
 			</File>
 			<File

@@ -10,7 +10,27 @@
 //
 #include "StdAfx.h"
 #include "wfxwid.h"
-#include "wfxcmn.h"
+#include "wfxfrmwk.h"
 
 USING_NAMESPACE_WFX;
 
+View::View()
+: m_pDoc(NULL)
+{
+
+}
+
+View::~View()
+{
+
+}
+
+Document* View::GetDocument() const
+{
+	return m_pDoc;
+}
+
+void View::SetDocument( Document* pDoc )
+{
+	m_pDoc = pDoc;
+}

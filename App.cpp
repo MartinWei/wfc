@@ -10,6 +10,39 @@
 //
 #include "StdAfx.h"
 #include "wfxwid.h"
-#include "wfxcmn.h"
+#include "wfxfrmwk.h"
 
 USING_NAMESPACE_WFX;
+
+App::App( HINSTANCE hInstance, PFrame pFrame /*= PFrame()*/ )
+: m_hInstance(hInstance)
+, m_pDocMgr(new DocManager)
+, m_pFrame(pFrame)
+{
+
+}
+
+App::~App()
+{
+
+}
+
+void App::AddDocument( CPDocFactory& pDocFactory, CPViewFactroy& pViewFactory )
+{
+
+}
+
+BOOL App::InitInstance()
+{
+	return FALSE;
+}
+
+int App::ExitInstance()
+{
+	return 1;
+}
+
+int App::Run()
+{
+	return 1;
+}

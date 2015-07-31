@@ -22,9 +22,11 @@ void RadioButtonItem::OnDraw( HDC hdc, const RECT& rcPaint )
 	{
 		return;
 	}
+	WfxRender::DrawRadioBoxItem(hdc, GetRect(), GetState(), IsChecked(), m_pDispatch);
 }
 
 RadioButton::RadioButton()
 {
 	m_pItem.reset(new RadioButtonItem);
+	SetText(L"Radio");
 }

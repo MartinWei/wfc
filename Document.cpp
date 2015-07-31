@@ -10,7 +10,42 @@
 //
 #include "StdAfx.h"
 #include "wfxwid.h"
-#include "wfxcmn.h"
+#include "wfxfrmwk.h"
 
 USING_NAMESPACE_WFX;
 
+Document::Document()
+: m_pView(NULL)
+{
+
+}
+
+Document::~Document()
+{
+
+}
+
+BOOL Document::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+{
+	return TRUE;
+}
+
+BOOL Document::Open()
+{
+	return TRUE;
+}
+
+BOOL Document::Close()
+{
+	return TRUE;
+}
+
+View* Document::GetView() const
+{
+	return m_pView;
+}
+
+void Document::SetView( View* pView )
+{
+	m_pView = pView;
+}

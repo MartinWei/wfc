@@ -8,23 +8,28 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
+#include "StdAfx.h"
+#include "wfxwid.h"
+#include "wfxfrmwk.h"
 
-#pragma once
+USING_NAMESPACE_WFX;
 
-#include "wfx.h"
-
-BEGIN_NAMESPACE_WFX
-
-class Window;
-class Document;
-class View;
-
-class WFX_API Frame : public Window
+Frame::Frame()
 {
-public:
-	virtual Document* GetActiveDoc();
-public:
-	View* GetActiveView();
-};
 
-END_NAMESPACE_WFX
+}
+
+Frame::~Frame()
+{
+
+}
+
+Document* Frame::GetActiveDoc()
+{
+	return NULL;
+}
+
+View* Frame::GetActiveView()
+{
+	return NULL;
+}

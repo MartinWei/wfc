@@ -58,7 +58,7 @@ WfxRender::MemDC::operator HDC()
 	return m_hdcMem;
 }
 
-void WfxRender::DrawButtton( HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch )
+void WfxRender::DrawButtton( HDC hdc, const String& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch )
 {
 	COLORREF clrBk = WBTN_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -97,7 +97,7 @@ void WfxRender::DrawRadioBox( HDC hdc, const RECT& rc, WORD wState, WidDispatch*
 
 }
 
-void WfxRender::DrawWidget( HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState , WidDispatch* pDispatch)
+void WfxRender::DrawWidget( HDC hdc, const String& strText, const RECT& rc, WORD wState , WidDispatch* pDispatch)
 {
 	DrawSolidRect(hdc, rc, WID_BKGND_STATIC, pDispatch);
 	DrawText(hdc, rc, strText, RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_CENTER, NULL, pDispatch);
@@ -118,7 +118,7 @@ void WfxRender::DrawFrame( HDC hdc, const RECT& rcPaint, COLORREF clr, WidDispat
 	::DeleteObject(brsh);
 }
 
-void WfxRender::DrawText( HDC hdc, const RECT& rcPaint, const std::wstring& strText, COLORREF clr, DWORD dwFormat, HFONT hFont /*= NULL*/, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawText( HDC hdc, const RECT& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont /*= NULL*/, WidDispatch* pDispatch /*= NULL*/ )
 {
 	ASSERT(::GetObjectType(hdc)==OBJ_DC || ::GetObjectType(hdc)==OBJ_MEMDC);
 	::SetBkMode(hdc, TRANSPARENT);
@@ -128,19 +128,14 @@ void WfxRender::DrawText( HDC hdc, const RECT& rcPaint, const std::wstring& strT
 		hOldFont = ::SelectObject(hdc, hFont);
 	else
 		hOldFont = ::SelectObject(hdc, GetFontObject());
-	std::wstring strTest(L"woqu");
+	String strTest(L"woqu");
 	::DrawTextW(hdc, strText.c_str(), strText.size(), (LPRECT)&rcPaint, dwFormat);
 	::SelectObject(hdc, hOldFont);
 }
 
-void WfxRender::DrawCheckBox( HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
-{
-
-}
-
 void WfxRender::DrawSlider( HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
 {
-	DrawSolidRect(hdc, rc, RGB(60, 60, 60), pDispatch);
+	DrawSolidRect(hdc, rc, WBTN_BKGND_MOUSE, pDispatch);
 }
 
 void WfxRender::DrawArror( HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
@@ -159,12 +154,12 @@ void WfxRender::GenerateClip( HDC hDC, const RECT& rcItem, RenderClip& clip )
 	clip.m_rcItem = rcItem;
 }
 
-void WfxRender::DrawHeadCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const std::wstring& strText, COLORREF clrText, DWORD dwFormat )
+void WfxRender::DrawHeadCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const String& strText, COLORREF clrText, DWORD dwFormat )
 {
 	COLORREF clrBk = WCELL_BKGRND;
 	if (dwState & WCS_SELECTED)
 		clrBk = WCELL_SELECTED;
-	std::wstring strDraw = strText;
+	String strDraw = strText;
 	if (dwState & WCS_ASORT)
 	{
 		strDraw += L"^";
@@ -179,21 +174,21 @@ void WfxRender::DrawHeadCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const
 	WfxRender::DrawText(hdc, rcPaint, strDraw, clrText, dwFormat);
 	if (dwState & WCS_MOUSEMOVE)
 	{
-		std::wstring strLine;
+		String strLine;
 		strLine.assign(strDraw.size(), L'_');
 		WfxRender::DrawText(hdc, rcPaint, strLine, clrText, dwFormat);
 	}
 	if (dwState & WCS_MOUSEMOVE)
 	{
-		WfxRender::DrawFrame(hdc, rcPaint, RGB(255, 0, 0), NULL);
+		WfxRender::DrawFrame(hdc, rcPaint, WBTN_BKGND_MOUSE, NULL);
 	}
 	else
 	{
-		WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
+		WfxRender::DrawFrame(hdc, rcPaint, WBTN_BKGND_MOUSE, NULL);
 	}
 }
 
-SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
+SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const String& strText, WORD wState, WidDispatch* pDispatch /*= NULL*/ )
 {
 	SIZE sz = {0};
 	sz.cx = rc.right - rc.left;
@@ -214,12 +209,12 @@ SIZE WfxRender::EstimateWidgetSize( const RECT& rc, const std::wstring& strText,
 	return sz;
 }
 
-void WfxRender::DrawLinkCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const std::wstring& strText, COLORREF clrText, DWORD dwFormat )
+void WfxRender::DrawLinkCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const String& strText, COLORREF clrText, DWORD dwFormat )
 {
 	COLORREF clrBk = WCELL_BKGRND;
 	if (dwState & WCS_SELECTED)
 		clrBk = WCELL_SELECTED;
-	std::wstring strDraw = strText;
+	String strDraw = strText;
 	if (dwState & WCS_ASORT)
 	{
 		strDraw += L"^";
@@ -232,22 +227,22 @@ void WfxRender::DrawLinkCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const
 	}
 	WfxRender::DrawSolidRect(hdc, rcPaint, clrBk, NULL);
 	WfxRender::DrawText(hdc, rcPaint, strDraw, clrText, dwFormat | DT_NOPREFIX);
-	std::wstring strLine;
+	String strLine;
 	strLine.assign(strDraw.size(), L'_');
 	WfxRender::DrawText(hdc, rcPaint, strLine, clrText, dwFormat);
 	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
 }
 
-void WfxRender::DrawLayerCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const std::wstring& strText, COLORREF clrText, DWORD dwFormat )
+void WfxRender::DrawLayerCell( HDC hdc, const RECT& rcPaint, DWORD dwState, const String& strText, COLORREF clrText, DWORD dwFormat )
 {
-	std::wstring str(L"+");
+	String str(L"+");
 
 	if (dwState & WCS_EXPAND)
 	{
 		str = L"-";
 	}
 	
-	WfxRender::DrawText(hdc, rcPaint, str, RGB(255, 255, 255), dwFormat);
+	WfxRender::DrawText(hdc, rcPaint, str, WBTN_BKGND_MOUSE, dwFormat);
 	WfxRender::DrawFrame(hdc, rcPaint, WCELL_FRAME, NULL);
 }
 
@@ -264,7 +259,7 @@ HFONT WfxRender::GetFontObject()
 	return s_hFont;
 }
 
-void WfxRender::DrawTextBox( HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WORD wMode, WidDispatch* pDispatch /*= NULL*/ )
+void WfxRender::DrawTextBox( HDC hdc, const String& strText, const RECT& rc, WORD wState, WORD wMode, WidDispatch* pDispatch /*= NULL*/ )
 {
 	COLORREF clrBk = WTXB_BKGND_STATIC;
 	COLORREF clrFrm = WBTN_FRAME_STATIC;
@@ -299,7 +294,180 @@ void WfxRender::DrawTextBox( HDC hdc, const std::wstring& strText, const RECT& r
 	DrawText(hdc, rcText, strText, clrText, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
 }
 
+void WfxRender::DrawCheckBoxItem( HDC hdc, const RECT& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch /*= NULL*/ )
+{
+	COLORREF clrBk = WBTN_BKGND_STATIC;
+	COLORREF clrFrm = WBTN_FRAME_STATIC;
+	COLORREF clrText = WID_TEXT_STATIC;
+	switch(wState)
+	{
+	case WID_STATE_STATIC:
+		clrFrm = WBTN_FRAME_STATIC;
+		clrText = WID_TEXT_STATIC;
+		break;
+	case WID_STATE_MOUSE:
+		clrFrm = WBTN_FRAME_MOUSE;
+		clrText = WID_TEXT_MOUSE;
+		break;
+	case WID_STATE_PUSH:
+		clrFrm = WBTN_FRAME_PUSH;
+		clrText = WID_TEXT_PUSH;
+		break;
+	case WID_STATE_CHECKED:
+		clrFrm = WBTN_FRAME_CHECKED;
+		clrText = WID_STATE_CHECKED;
+		break;
+	}
+	DrawSolidRect(hdc, rc, clrBk, pDispatch);
+	if (bChecked)
+	{
+		RECT rcMark = rc;
+		rcMark.left += 2;
+		rcMark.right -= 2;
+		rcMark.top += 2;
+		rcMark.bottom -= 2;
+		HPEN hPen = ::CreatePen(PS_SOLID, 2, clrFrm);
+		HGDIOBJ hOldPen = ::SelectObject(hdc, hPen);
+		int x = rcMark.left;
+		int y = rcMark.top + ((float)((rcMark.bottom - rcMark.top) * 2) / (float)3);
+		::MoveToEx(hdc, x, y, NULL);
+		x = rcMark.left + ((float)(rcMark.right - rcMark.left) / (float)3);
+		y = rcMark.bottom;
+		::LineTo(hdc, x, y);
+		x = rcMark.right;
+		y = rcMark.top;
+		::LineTo(hdc, x, y);
+		::SelectObject(hdc, hOldPen);
+		::DeleteObject(hPen);
+	}
+	DrawFrame(hdc, rc, clrFrm, pDispatch);
+}
 
+void WfxRender::DrawCheckBox( HDC hdc, const String& strText, const RECT& rc, WORD wState, ULONG nTextOffset, WidDispatch* pDispatch /*= NULL*/ )
+{
+	COLORREF clrBk = WBTN_BKGND_STATIC;
+	COLORREF clrFrm = WBTN_FRAME_STATIC;
+	COLORREF clrText = WID_TEXT_STATIC;
+	switch(wState)
+	{
+	case WID_STATE_STATIC:
+		clrBk = WID_BKGND_STATIC;
+		clrFrm = WBTN_FRAME_STATIC;
+		clrText = WID_TEXT_STATIC;
+		break;
+	case WID_STATE_MOUSE:
+		clrBk = WBTN_BKGND_MOUSE;
+		clrFrm = WBTN_FRAME_MOUSE;
+		clrText = WID_TEXT_MOUSE;
+		break;
+	case WID_STATE_PUSH:
+		clrBk = WBTN_BKGND_PUSH;
+		clrFrm = WBTN_FRAME_PUSH;
+		clrText = WID_TEXT_PUSH;
+		break;
+	case WID_STATE_CHECKED:
+		clrBk = WBTN_BKGND_CHECKED;
+		clrFrm = WBTN_FRAME_CHECKED;
+		clrText = WID_STATE_CHECKED;
+		break;
+	}
+	DrawSolidRect(hdc, rc, clrBk, pDispatch);
+	DrawFrame(hdc, rc, clrFrm, pDispatch);
+	RECT rcText = rc;
+	rcText.left += nTextOffset;
+	DrawText(hdc, rcText, strText, clrText, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+}
+
+void WfxRender::DrawRadioBoxItem( HDC hdc, const RECT& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch /*= NULL*/ )
+{
+	COLORREF clrBk = WBTN_BKGND_STATIC;
+	COLORREF clrFrm = WBTN_FRAME_STATIC;
+	COLORREF clrText = WID_TEXT_STATIC;
+	switch(wState)
+	{
+	case WID_STATE_STATIC:
+		clrFrm = WBTN_FRAME_STATIC;
+		clrText = WID_TEXT_STATIC;
+		break;
+	case WID_STATE_MOUSE:
+		clrFrm = WBTN_FRAME_MOUSE;
+		clrText = WID_TEXT_MOUSE;
+		break;
+	case WID_STATE_PUSH:
+		clrFrm = WBTN_FRAME_PUSH;
+		clrText = WID_TEXT_PUSH;
+		break;
+	case WID_STATE_CHECKED:
+		clrFrm = WBTN_FRAME_CHECKED;
+		clrText = WID_STATE_CHECKED;
+		break;
+	}
+	DrawSolidRect(hdc, rc, clrBk, pDispatch);
+	if (bChecked)
+	{
+		RECT rcMark = rc;
+		rcMark.left += 2;
+		rcMark.right -= 2;
+		rcMark.top += 2;
+		rcMark.bottom -= 2;
+		DrawSolidRect(hdc, rcMark, clrFrm, pDispatch);
+	}
+	DrawFrame(hdc, rc, clrFrm, pDispatch);
+}
+
+void WfxRender::DrawProcessBar( HDC hdc, const RECT& rc, WORD wState, ULONG nMax, ULONG nPos, WidDispatch* pDispatch /*= NULL*/ )
+{
+	COLORREF clrBk = WBTN_BKGND_STATIC;
+	COLORREF clrFrm = WBTN_FRAME_STATIC;
+	COLORREF clrText = WID_TEXT_STATIC;
+	switch(wState)
+	{
+	case WID_STATE_STATIC:
+		clrFrm = WBTN_FRAME_STATIC;
+		clrText = WID_TEXT_STATIC;
+		break;
+	case WID_STATE_MOUSE:
+		clrFrm = WBTN_FRAME_MOUSE;
+		clrText = WID_TEXT_MOUSE;
+		break;
+	case WID_STATE_PUSH:
+		clrFrm = WBTN_FRAME_PUSH;
+		clrText = WID_TEXT_PUSH;
+		break;
+	case WID_STATE_CHECKED:
+		clrFrm = WBTN_FRAME_CHECKED;
+		clrText = WID_STATE_CHECKED;
+		break;
+	}
+	String strText;
+	strText.Format(L"%d/%d", nMax, nMax);
+	HGDIOBJ hOldFont = ::SelectObject(hdc, GetFontObject());
+	SIZE sz = {0};
+	::GetTextExtentPoint32(hdc, strText.c_str(), strText.size(), &sz);
+	RECT rcDraw = rc;
+	rcDraw.right -= sz.cx + 2;
+	rcDraw.top += 2;
+	rcDraw.left += 2;
+	rcDraw.bottom -= 2;
+	RECT rcPercent = rcDraw;
+	RECT rcText = rc;
+	rcText.left = rcDraw.right;
+	rcText.right -= 2;
+	DrawFrame(hdc, rcDraw, clrFrm);
+	DrawFrame(hdc, rc, clrFrm);
+	if (nMax > 0)
+	{
+		ULONG nBarLength = (rcDraw.right - rcDraw.left) * (float)nPos / (float)nMax;
+		rcDraw.right = rcDraw.left + nBarLength;
+		DrawSolidRect(hdc, rcDraw, WBTN_BKGND_MOUSE, pDispatch);
+		strText.Format(L"%.2f%%", (float)(100*(float)nPos)/(float)nMax);
+		DrawText(hdc, rcPercent, strText, clrText, DT_VCENTER | DT_CENTER | DT_SINGLELINE, GetFontObject(), pDispatch);
+
+	}
+	strText.Format(L"%d/%d", nPos, nMax);
+	DrawText(hdc, rcText, strText, clrText, DT_VCENTER | DT_RIGHT | DT_SINGLELINE, GetFontObject(), pDispatch);
+	::SelectObject(hdc, hOldFont);
+}
 
 HFONT WfxRender::s_hFont = NULL;
 

@@ -267,11 +267,11 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 	}
 }
 
-std::wstring Window::GetText() const
+String Window::GetText() const
 {
 	ASSERT(m_hWnd != NULL);
 	int nLen = GetWindowTextLengthW(m_hWnd) + 1;
-	std::wstring strText;
+	String strText;
 	WCHAR* pszText = new WCHAR[nLen];
 	::GetWindowTextW(m_hWnd, pszText, nLen);
 	strText = pszText;
@@ -285,7 +285,7 @@ void Window::SetFont( HFONT hFont ) const
 }
 
 
-void Window::SetText( const std::wstring& strText )
+void Window::SetText( const String& strText )
 {
 	ASSERT(m_hWnd != NULL);
 	::SetWindowTextW(m_hWnd, strText.c_str());

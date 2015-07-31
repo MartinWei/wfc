@@ -11,5 +11,37 @@
 #include "StdAfx.h"
 #include "wfxwid.h"
 #include "wfxcmn.h"
+#include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
+
+ProcessBar::ProcessBar()
+: m_nMax(0)
+, m_nPos(0)
+{
+
+}
+
+void ProcessBar::SetRange( ULONG nMax )
+{
+	m_nMax = nMax;
+}
+
+void ProcessBar::SetPos( ULONG nPos, BOOL bDraw /*= TRUE*/ )
+{
+	m_nPos = nPos;
+	if (bDraw)
+	{
+		InvalidWid();
+	}
+}
+
+ULONG ProcessBar::GetPos() const
+{
+	return m_nPos;
+}
+
+void ProcessBar::OnDraw( HDC hdc, const RECT& rc )
+{
+	WfxRender::DrawProcessBar(hdc, GetRect(), GetState(), m_nMax, m_nPos, m_pDispatch);
+}

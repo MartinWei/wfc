@@ -135,7 +135,7 @@ void Widget::OnDraw( HDC hdc, const RECT& rcPaint )
 	rc.top = m_rcWid.top - m_nVertPosOffset;
 	WfxRender::DrawSolidRect(hdc, m_rcWid, WID_BKGND_STATIC, m_pDispatch);
 	WfxRender::DrawText(hdc, rc, m_strText, RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
-	WfxRender::DrawFrame(hdc, m_rcWid, WID_FRAME_STATIC, m_pDispatch);
+	WfxRender::DrawFrame(hdc, m_rcWid, WBTN_BKGND_MOUSE, m_pDispatch);
 }
 
 void Widget::SetHwid( HWID hWid )
@@ -203,12 +203,12 @@ void Widget::SetScrollBar( int nBar, ScrollBar* pScrollBar )
 	}
 }
 
-void Widget::SetText( const std::wstring& strText )
+void Widget::SetText( const String& strText )
 {
 	m_strText = strText;
 }
 
-std::wstring Widget::GetText() const
+String Widget::GetText() const
 {
 	return m_strText;
 }
@@ -308,7 +308,7 @@ LRESULT Widget::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 			
 		}
 	}
-	//InvalidWid();
+	InvalidWid();
 	return 0;
 }
 
@@ -534,7 +534,7 @@ ScrollBar::ScrollBar( int nBar )
 	memset(m_pScrollInfo.get(), 0, sizeof(SCROLLINFO));
 	m_pScrollInfo->cbSize = sizeof(SCROLLINFO);
 	m_pScrollInfo->nMax = 10000;
-	m_pScrollInfo->nMin = 69;
+	m_pScrollInfo->nMin = 0;
 	m_ptLButtonDown.x = -1;
 	m_ptLButtonDown.y = -1;
 }
@@ -992,10 +992,10 @@ ImageWid::ImageWid()
 
 }
 
-ImageWid::ImageWid(const std::wstring& strStatic,
-				   const std::wstring& strMouse, 
-				   const std::wstring& strPush,
-				   const std::wstring& strChecked)
+ImageWid::ImageWid(const String& strStatic,
+				   const String& strMouse, 
+				   const String& strPush,
+				   const String& strChecked)
 				   : m_pStatic(Gdiplus::Image::FromFile(strStatic.c_str()))
 				   , m_pMouse(Gdiplus::Image::FromFile(strMouse.c_str()))
 				   , m_pPush(Gdiplus::Image::FromFile(strPush.c_str()))
@@ -1008,7 +1008,7 @@ ImageWid::~ImageWid()
 
 }
 
-void ImageWid::SetImage( WORD wState, const std::wstring& strImage )
+void ImageWid::SetImage( WORD wState, const String& strImage )
 {
 	switch(wState)
 	{
@@ -1029,10 +1029,10 @@ void ImageWid::SetImage( WORD wState, const std::wstring& strImage )
 	}
 }
 
-void ImageWid::SetImage( const std::wstring& strStatic, 
-						const std::wstring& strMouse, 
-						const std::wstring& strPush,
-						const std::wstring& strChecked)
+void ImageWid::SetImage( const String& strStatic, 
+						const String& strMouse, 
+						const String& strPush,
+						const String& strChecked)
 {
 	m_pStatic.reset(Gdiplus::Image::FromFile(strStatic.c_str()));
 	m_pMouse.reset(Gdiplus::Image::FromFile(strMouse.c_str()));

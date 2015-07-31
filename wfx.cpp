@@ -19,23 +19,76 @@
 void __Trace( const wchar_t* pstrFormat, ... )
 {
 #ifdef _DEBUG
-	WCHAR szBuffer[300] = { 0 };
-	va_list args;
-	va_start(args, pstrFormat);
-	::wvnsprintf(szBuffer, lengthof(szBuffer) - 2, pstrFormat, args);
-	wcscat_s(szBuffer, 300, L"\n");
-	va_end(args);
-	::OutputDebugStringW(szBuffer);
+	va_list arglist;
+	va_start(arglist, pstrFormat);
+	if (pstrFormat == NULL)
+	{
+		return;
+	}
+	int nLength = String::GetFormattedLength(pstrFormat, arglist);
+	wchar_t* pszBuffer = new wchar_t[nLength + 1];
+	::ZeroMemory(pszBuffer, nLength + 1);
+	String::Format(pszBuffer, nLength + 1, pstrFormat, arglist);
+	va_end(arglist);
+	String str = pszBuffer;
+	delete []pszBuffer;
+	str += L"\n";
+	::OutputDebugStringW(str.c_str());
 #endif
 }
 
-std::wstring StrFormat( const wchar_t* pstrFormat, ... )
+void String::Format( const wchar_t* pszFormat, ... )
 {
-	WCHAR szBuffer[300] = { 0 };
-	va_list args;
-	va_start(args, pstrFormat);
-	::wvnsprintf(szBuffer, lengthof(szBuffer) - 2, pstrFormat, args);
-	wcscat_s(szBuffer, 300, L"\n");
-	va_end(args);
-	return szBuffer;
+	va_list arglist;
+	va_start(arglist, pszFormat);
+	FormatV(pszFormat, arglist);
+	va_end(arglist);
+}
+
+int String::Format( wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args )
+{
+	return vswprintf_s(pszBuffer, nLength, pszFormat, args);
+}
+
+void String::FormatV( const wchar_t* pszFormat, va_list args )
+{
+	if (pszFormat == NULL)
+	{
+		return;
+	}
+	int nLength = GetFormattedLength(pszFormat, args);
+	wchar_t* pszBuffer = new wchar_t[nLength + 1];
+	::ZeroMemory(pszBuffer, nLength + 1);
+	Format(pszBuffer, nLength + 1, pszFormat, args);
+	std::wstring::operator=(String(pszBuffer));
+	delete []pszBuffer;
+}
+
+int String::GetFormattedLength( const wchar_t* pszFormat, va_list args )
+{
+	return _vscwprintf(pszFormat, args);
+}
+
+String::String()
+: std::wstring()
+{
+
+}
+
+String::String(const wchar_t* psz)
+: std::wstring(psz)
+{
+
+}
+
+String::String(const String& rh)
+: std::wstring(rh)
+{
+
+}
+
+String& String::operator=(const String& rh)
+{
+	std::wstring::operator=(rh);
+	return *this;
 }

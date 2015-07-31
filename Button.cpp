@@ -15,10 +15,10 @@
 
 USING_NAMESPACE_WFX;
 
-Button::Button(BOOL bCheckState /*= FALSE*/)
+Button::Button(BOOL bCheckable /*= FALSE*/)
 : m_bLButtonDown(FALSE)
 , m_bChecked(FALSE)
-, m_bCheckState(bCheckState)
+, m_bCheckable(bCheckable)
 {
 	SetText(L"Button");
 }
@@ -36,7 +36,6 @@ void Button::OnDraw( HDC hdc, const RECT& rcPaint )
 		RECT rc = GetRect();
 		WfxRender::DrawButtton(hdc, GetText(), rc, GetState(), m_pDispatch);
 	}
-
 }
 
 void Button::Check( BOOL bCheck /*= TRUE*/ )
@@ -44,13 +43,14 @@ void Button::Check( BOOL bCheck /*= TRUE*/ )
 	m_bChecked = bCheck;
 }
 
-BOOL Button::IsCheck() const
+BOOL Button::IsChecked() const
 {
 	return m_bChecked;
 }
 
 LRESULT Button::OnLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
+	m_bChecked = !m_bChecked;
 	SendParentMessage(WM_COMMAND, MAKELONG(GetID(), BN_CLICKED), (LPARAM)GetHwid());
 	InvalidWid();
 	return 1;
@@ -58,7 +58,7 @@ LRESULT Button::OnLButtonClik( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
 LRESULT Button::OnStateChanged( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	if (m_bCheckState && m_bChecked)
+	if (m_bCheckable && m_bChecked)
 	{
 		m_clrText = (WID_TEXT_CHECKED);
 		m_clrBkgnd = (WID_BKGND_CHECKED);

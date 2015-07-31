@@ -159,20 +159,29 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			return lResult;
 		}
 	}
+	ProcessMessage(uMsg, wParam, lParam, lResult, 0);
+	return lResult;
+	
+}
+
+BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+{
+	POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+	Widget* pWid = NULL;
 	switch(uMsg)
 	{
 	case WM_ERASEBKGND:
 		return lResult;
 	case WM_PAINT:
 		{
-		// Handle WM_PAINT message
-		RECT rcPaint = { 0 };
-		if( !::GetUpdateRect(m_hWnd, &rcPaint, FALSE) ) 
-			return 1;
-		PAINTSTRUCT ps = { 0 };
-		::BeginPaint(m_hWnd, &ps);
-		OnPaint(ps.rcPaint);
-		::EndPaint(m_hWnd, &ps);
+			// Handle WM_PAINT message
+			RECT rcPaint = { 0 };
+			if( !::GetUpdateRect(m_hWnd, &rcPaint, FALSE) ) 
+				return 1;
+			PAINTSTRUCT ps = { 0 };
+			::BeginPaint(m_hWnd, &ps);
+			OnPaint(ps.rcPaint);
+			::EndPaint(m_hWnd, &ps);
 		}
 		break;
 	case WM_MOUSEMOVE:

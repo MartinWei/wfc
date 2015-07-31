@@ -21,8 +21,8 @@ CheckBoxItem::CheckBoxItem()
 
 }
 
-CheckBoxItem::CheckBoxItem(const std::wstring& strChecked,
-						   const std::wstring& strUnCheck)
+CheckBoxItem::CheckBoxItem(const String& strChecked,
+						   const String& strUnCheck)
 						   : m_pImageChecked(Gdiplus::Image::FromFile(strChecked.c_str()))
 						   , m_pImageUnCheck(Gdiplus::Image::FromFile(strUnCheck.c_str()))
 {
@@ -42,7 +42,7 @@ void CheckBoxItem::OnDraw( HDC hdc, const RECT& rcPaint )
 		return;
 	}
 	RECT rc = GetRect();
-	WfxRender::DrawCheckBox(hdc, rc, GetState(), m_pDispatch);
+	WfxRender::DrawCheckBoxItem(hdc, rc, GetState(), IsChecked(), m_pDispatch);
 }
 
 SharedPtr<Gdiplus::Image> CheckBoxItem::GetImage() const
@@ -54,7 +54,7 @@ CheckBox::CheckBox()
 : m_pItem(new CheckBoxItem)
 , m_lOffset(0)
 {
-
+	SetText(L"CheckBox");
 }
 
 LRESULT CheckBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
@@ -67,26 +67,16 @@ LRESULT CheckBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	RECT rc = GetRect();
-	rc.right = rc.left + WID_CKB_SIZE;
 	rc.left += 2;
+	rc.right = rc.left + WID_CKB_SIZE;
 	rc.top = rc.top + (rc.bottom - rc.top - WID_CKB_SIZE) / 2;
 	rc.bottom = rc.top + WID_CKB_SIZE;
 	m_pItem->SetRect(rc);
-	m_lOffset = WID_CKB_SIZE + 5;
+	m_lOffset = rc.right - rc.left + 2;
 	return 0;
 }
 
 void CheckBox::OnDraw( HDC hdc, const RECT& rcPaint )
 {
-	/*RECT rc;
-	GetRect(rc);
-	Gdiplus::SolidBrush brsh(m_clrBkgnd);
-	grph.FillRectangle(&brsh, rc.X, rc.Y, rc.Width, rc.Height);
-	Gdiplus::Pen pn(m_clrFrame);
-	grph.DrawRectangle(&pn, rc);
-	brsh.SetColor(m_clrText);
-	rc.X += m_lOffset;
-	rc.Width -= m_lOffset;
-	grph.DrawString(m_strText.c_str(), m_strText.size(), m_pFont.get(),
-		rc, m_pFormat.get(), &brsh);*/
+ WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), GetState(), m_lOffset, m_pDispatch);
 }

@@ -45,24 +45,27 @@ public:
 	};
 public:
 
-	static void DrawWidget(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
-	static void DrawButtton(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
-	static void DrawTextBox(HDC hdc, const std::wstring& strText, const RECT& rc, WORD wState, WORD wMode, WidDispatch* pDispatch = NULL);
-	static void DrawCheckBox(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
+	static void DrawWidget(HDC hdc, const String& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
+	static void DrawButtton(HDC hdc, const String& strText, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
+	static void DrawTextBox(HDC hdc, const String& strText, const RECT& rc, WORD wState, WORD wMode, WidDispatch* pDispatch = NULL);
+	static void DrawCheckBoxItem(HDC hdc, const RECT& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch = NULL);
+	static void DrawCheckBox(HDC hdc, const String& strText, const RECT& rc, WORD wState, ULONG nTextOffset, WidDispatch* pDispatch = NULL);
+	static void DrawRadioBoxItem(HDC hdc, const RECT& rc, WORD wState, BOOL bChecked, WidDispatch* pDispatch = NULL);
 	static void DrawRadioBox(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
+	static void DrawProcessBar(HDC hdc, const RECT& rc, WORD wState, ULONG nMax, ULONG nPos, WidDispatch* pDispatch = NULL);
 	static void DrawSolidRect(HDC hdc, const RECT& rcPaint, COLORREF clr, WidDispatch* pDispatch = NULL);
 	static void DrawFrame(HDC hdc, const RECT& rcPaint, COLORREF clr, WidDispatch* pDispatch = NULL);
-	static void DrawText(HDC hdc, const RECT& rcPaint, const std::wstring& strText, COLORREF clr, DWORD dwFormat, HFONT hFont = NULL, WidDispatch* pDispatch = NULL);
+	static void DrawText(HDC hdc, const RECT& rcPaint, const String& strText, COLORREF clr, DWORD dwFormat, HFONT hFont = NULL, WidDispatch* pDispatch = NULL);
 	static void DrawSlider(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void DrawArror(HDC hdc, const RECT& rc, WORD wState, WidDispatch* pDispatch = NULL);
 	static void GenerateClip(HDC hdc, const RECT& rcItem, RenderClip& clip);
 	static void DrawHeadCell(HDC hdc, const RECT& rcPaint,  DWORD dwState,
-		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+		const String& strText, COLORREF clrText, DWORD dwFormat);
 	static void DrawLinkCell(HDC hdc, const RECT& rcPaint, DWORD dwState,
-		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
+		const String& strText, COLORREF clrText, DWORD dwFormat);
 	static void DrawLayerCell(HDC hdc, const RECT& rcPaint, DWORD dwState,
-		const std::wstring& strText, COLORREF clrText, DWORD dwFormat);
-	static SIZE EstimateWidgetSize(const RECT& rc, const std::wstring& strText, WORD wState, WidDispatch* pDispatch = NULL);
+		const String& strText, COLORREF clrText, DWORD dwFormat);
+	static SIZE EstimateWidgetSize(const RECT& rc, const String& strText, WORD wState, WidDispatch* pDispatch = NULL);
 	static HFONT GetFontObject();
 protected:
 	static HFONT s_hFont;
