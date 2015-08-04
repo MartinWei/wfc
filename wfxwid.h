@@ -42,8 +42,8 @@ class Window;
 
 
 //////////////////////////////////////////////////////////////////////////
-// WidgetBase Interface of widget
-class WFX_API WidgetBase
+// MsgMap Interface of widget
+class WFX_API MsgMap
 {
 public:
 	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -53,13 +53,54 @@ public:
 
 typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
 
+class WFX_API AttrBase
+{
+public:
+	AttrBase(Widget* pParent = NULL);
+public:
+	virtual void SetText(const String& strText);
+	virtual void SetFormat(DWORD dwFormat);
+	virtual void SetTextColor(COLORREF clrText);
+	virtual void SetBkgnd(COLORREF clrBkgnd);
+	virtual void SetFrame(COLORREF clrFrame);
+	virtual void SetImage(const String& strImage);
+	virtual void SetState(WORD wState);
+	virtual void SetRect(const Rect& rect);
+	virtual String GetText() const;
+	virtual DWORD GetFormat() const;
+	virtual COLORREF GetTextColor() const;
+	virtual COLORREF GetBkgnd() const;
+	virtual COLORREF GetFrame() const;
+	virtual PImage GetImage() const;
+	virtual WORD GetState() const;
+	virtual Rect GetRect() const;
+	virtual Widget* GetParent() const;
+	virtual void SetParent(Widget* pParent);
+protected:
+	String m_strText;
+	DWORD m_dwFormat;
+	COLORREF m_clrText;
+	COLORREF m_clrBkgnd;
+	COLORREF m_clrFrame;
+	WORD m_wState;
+	PImage m_pImg;
+	Rect m_rect;
+	Widget* m_pParent;
+};
+
+typedef SharedPtr<AttrBase> PBasicAttr;
+
 //////////////////////////////////////////////////////////////////////////
 // Widget: the root class of ui classes
 class WFX_API Widget :
-	public WidgetBase
+	public MsgMap, public AttrBase
 {
 	friend class WidDispatch;
 	friend class Timer;
+public:
+	typedef std::vector<Widget*> WidList;
+	typedef std::vector<Widget*>::iterator WidIter;
+	typedef std::vector<Widget*>::const_iterator CWidIter;
 public:
 	Widget(void);
 	virtual ~Widget(void);
@@ -84,14 +125,15 @@ public:
 	WFX_END_MSG_MAP()
 
 public:
-	BOOL Create(const RECT& rc, WidDispatch* pDispatch,
+	BOOL Create(const Rect& rc, WidDispatch* pDispatch,
 		Widget* pParent = NULL, BOOL bNC = FALSE);
 
 	// Position
 public:
-	RECT GetRect() const;
-	void SetRect(const RECT& rc);
-	RECT GetParentRect() const;
+	virtual void SetRect(const Rect& rc);
+	virtual void SetState(WORD wState);
+public:
+	Rect GetParentRect() const;
 	void ShowWid(WORD wShow);
 	BOOL IsShow() const;
 	void SetCapture();
@@ -99,12 +141,10 @@ public:
 
 protected:
 	void MyShowWid(WORD wShow);
-	RECT GetDrawRect() const;
-	void SetDrawRect(const RECT& rc);
+	Rect GetDrawRect() const;
+	void SetDrawRect(const Rect& rc);
 public:
-	// Generation
-	Widget* GetParent() const;
-	void SetParent(Widget* pParent);
+	virtual void SetParent(Widget* pParent);
 	// For WidDispatch
 protected:
 	void SetMyParent(Widget* pParent);
@@ -118,7 +158,7 @@ public:
 	// Graphics
 	void InvalidWid();
 protected:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 
 protected:
 	void SetHwid(HWID hWid);
@@ -134,11 +174,6 @@ public:
 protected:
 	void SetScrollBar(int nBar, ScrollBar* pScrollBar);
 	ScrollBar* GetScrollBar(int nBar) const;
-	// Text
-public:
-	void SetText(const String& strText);
-	String GetText() const;
-	virtual HFONT GetFontObject() const;
 public:
 	BOOL PostWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
@@ -178,53 +213,53 @@ public:
 	void SetVOffset(LONG nOffset);
 	LONG GetHOffset() const;
 	void SetHOffset(LONG nOffset);
-	SIZE GetVirtualSize() const;
-	void SetState(WORD wState);
-	WORD GetState() const;
+	Size GetVirtualSize() const;
+	
+public:
 	UINT GetID() const;
 	void SetID(UINT nID);
 public:
 	void SetVirtualSizeValid(BOOL bValid = TRUE);
 protected:
-	virtual SIZE EstimateVirualSize();
+	virtual Size EstimateVirualSize();
 	// Identifier
 public:
 	HWID m_hWid;
 	WidDispatch* m_pDispatch;
-protected:
-	String m_strText;
-	DWORD m_dwFormat;
-	SharedPtr<LOGFONTW> m_pFont;
-	COLORREF m_clrBkgnd;
-	COLORREF m_clrFrame;
-	COLORREF m_clrText;
 private:
 	// Position
-	RECT m_rcDraw;
-	RECT m_rcWid;
+	Rect m_rcDraw;
 	BOOL m_bNC;
 	WORD m_wShow;
 	// Generation
-	Widget* m_pParent;
 	std::vector<Widget*> m_rgpChildren;
 	// Scrollbar
 	ScrollBar* m_pHScrollbar;
 	ScrollBar* m_pVScrollbar;
+
 	UINT m_uBarFlag;
 	LONG m_nHorzPosOffset;
 	LONG m_nVertPosOffset;
 	// Timers need to be killed.
 	std::vector<UINT_PTR> m_rgTimer;
 	// Size
-	SIZE m_szVirtual;
+	Size m_szVirtual;
 	BOOL m_bVirtualSizeValid;
-	// State
-	WORD m_wState;
 	// Event ID
 	UINT m_nID;
 };
 
 typedef SharedPtr<Widget> PWidget;
+
+class WFX_API UnitBase : public MsgMap, public AttrBase
+{
+public:
+	UnitBase(Widget* pWid = NULL);
+public:
+	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
+		LRESULT& lResult, DWORD dwMsgMapID);
+	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
+};
 
 //////////////////////////////////////////////////////////////////////////
 // Slider: for ScrollBar
@@ -248,16 +283,16 @@ public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
 	BOOL m_bLButtonDown;
 	BOOL m_bInSlider;
-	POINT m_ptLButtonDown;
+	Point m_ptLButtonDown;
 	int m_nBar;
 };
 
 typedef SharedPtr<Slider> PSlider;
-
+typedef SharedPtr<SCROLLINFO> PSCROLLINFO;
 //////////////////////////////////////////////////////////////////////////
 // ScrollBar: Common ScrollBar
 class WFX_API ScrollBar : public Widget
@@ -284,8 +319,8 @@ public:
 	//int GetMin() const;
 
 protected:
-	int CalcSliderPos(const RECT& rcSlider);
-	RECT CalcSliderRect(const RECT& rcMaxSlider);
+	int CalcSliderPos(const Rect& rcSlider);
+	Rect CalcSliderRect(const Rect& rcMaxSlider);
 	int GetSliderMax();
 	int GetSliderMin();
 	int GetSlierMid();
@@ -303,15 +338,15 @@ protected:
 	int m_nBar;
 	BOOL m_bLButtonDown;
 	BOOL m_bInSlider;
-	POINT m_ptLButtonDown;
+	Point m_ptLButtonDown;
 	LONG m_nSliderSize;
 	LONG m_nArrorSize;
 	LONG m_nSAMargin;
 protected:
-	SharedPtr<SCROLLINFO> m_pScrollInfo;
-	SharedPtr<Widget> m_pArrow1;
-	SharedPtr<Widget> m_pArrow2;
-	SharedPtr<Widget> m_pSlider;
+	PSCROLLINFO m_pScrollInfo;
+	PWidget m_pArrow1;
+	PWidget m_pArrow2;
+	PWidget m_pSlider;
 };
 
 typedef SharedPtr<ScrollBar> PScrollBar;
@@ -324,7 +359,6 @@ public:
 		const String& strMouse, 
 		const String& strPush,
 		const String& strChecked);
-	virtual ~ImageWid();
 public:
 	void SetImage(WORD wState, const String& strImage);
 	void SetImage(const String& strStatic,
@@ -332,12 +366,12 @@ public:
 		const String& strPush,
 		const String& strChecked);
 protected:
-	SharedPtr<Gdiplus::Image> GetImageFromState();
+	PImage GetImageFromState();
 protected:
-	SharedPtr<Gdiplus::Image> m_pStatic;
-	SharedPtr<Gdiplus::Image> m_pMouse;
-	SharedPtr<Gdiplus::Image> m_pPush;
-	SharedPtr<Gdiplus::Image> m_pChecked;
+	PImage m_pStatic;
+	PImage m_pMouse;
+	PImage m_pPush;
+	PImage m_pChecked;
 };
 
 typedef SharedPtr<ImageWid> PImageWid;
@@ -353,9 +387,8 @@ class WFX_API Button : public ImageWid
 {
 public:
 	Button(BOOL m_bCheckable = FALSE);
-	virtual ~Button();
 public:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 
 	WFX_BEGIN_MSG_MAP(Button)
 		WFX_MESSAGE_HANDLER(WUM_LBUTTONCLICK, OnLButtonClik)
@@ -383,16 +416,15 @@ public:
 	CheckBoxItem();
 	CheckBoxItem(const String& strChecked,
 		const String& strUnCheck);
-	virtual ~CheckBoxItem();
 public:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 
 protected:
-	SharedPtr<Gdiplus::Image> GetImage() const;
+	PImage GetImage() const;
 
 protected:
-	SharedPtr<Gdiplus::Image> m_pImageChecked;
-	SharedPtr<Gdiplus::Image> m_pImageUnCheck;
+	PImage m_pImageChecked;
+	PImage m_pImageUnCheck;
 };
 
 typedef SharedPtr<CheckBoxItem> PCheckBoxItem;
@@ -420,10 +452,10 @@ public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
 	ULONG m_lOffset;
-	SharedPtr<Button> m_pItem;
+	PButton m_pItem;
 };
 
 typedef SharedPtr<CheckBox> PCheckBox;
@@ -431,7 +463,7 @@ typedef SharedPtr<CheckBox> PCheckBox;
 class WFX_API RadioButtonItem : public CheckBoxItem
 {
 public:
-	virtual void OnDraw(HDC hdc, const RECT& rc);
+	virtual void OnDraw(HDC hdc, const Rect& rc);
 };
 
 typedef SharedPtr<RadioButtonItem> PRadioButtonItem;
@@ -460,7 +492,7 @@ public:
 	void SetPos(ULONG nPos, BOOL bDraw = TRUE);
 	ULONG GetPos() const;
 public:
-	virtual void OnDraw(HDC hdc, const RECT& rc);
+	virtual void OnDraw(HDC hdc, const Rect& rc);
 protected:
 	ULONG m_nMax;
 	ULONG m_nPos;
@@ -472,7 +504,6 @@ class WFX_API InPlaceWid : public Widget
 {
 public:
 	InPlaceWid();
-	virtual ~InPlaceWid();
 public:
 	WFX_BEGIN_MSG_MAP(InPlaceWid)
 		WFX_MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -511,7 +542,7 @@ public:
 	BOOL IsPassword() const;
 protected:
 	virtual BOOL Initial();
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
 	WORD m_wMode;
 	BOOL m_bEditting;
@@ -532,13 +563,14 @@ protected:
 
 typedef SharedPtr<ComboBox> PComboBox;
 
+typedef SharedPtr<WidDispatch> PWidDispatch;
 ////////////////////////////////////////////////////////////////////////
 // Window: Window for controls
-class WFX_API Window : public WidgetBase
+class WFX_API Window : public MsgMap
 {
 public:
 	// !!! m_pDispatch must be the first member
-	SharedPtr<WidDispatch> m_pDispatch;
+	PWidDispatch m_pDispatch;
 public:
 	Window();
 	virtual ~Window();
@@ -550,7 +582,7 @@ public:
 	BOOL RegisterSuperClass();
 
 	HWND Create(HWND hwndParent, LPCTSTR pszName,
-		DWORD dwStyle, DWORD dwExStyle, const RECT& rc,
+		DWORD dwStyle, DWORD dwExStyle, const Rect& rc,
 		HMENU hMenu = NULL);
 
 	HWND SubClass(HWND hWnd);
@@ -563,7 +595,7 @@ public:
 	String GetText() const;
 	void SetText(const String& strText);
 	void SetFont(HFONT hFont) const;
-	void GetClientRect(RECT& rc);
+	void GetClientRect(Rect& rc);
 	UINT_PTR SetTimer(UINT_PTR nIDEvent,
 		UINT uElapse,
 		TIMERPROC lpTimerFunc) const;
@@ -595,7 +627,6 @@ class WFX_API InPlaceWnd : public Window
 {
 public:
 	InPlaceWnd();
-	virtual ~InPlaceWnd();
 	virtual void OnFinalMessage(HWND hWnd);
 public:
 	WFX_BEGIN_MSG_MAP(InPlaceWnd)
@@ -656,7 +687,7 @@ public:
 	wfx_msg LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 protected:
-	SharedPtr<Widget> m_pRoot;
+	PWidget m_pRoot;
 	std::vector<Widget*> m_rgpItems;
 };
 
@@ -703,7 +734,6 @@ class Timer
 	friend class WidDispatch;
 public:
 	Timer(WidDispatch* pDispatch);
-	~Timer();
 public:
 	UINT_PTR SetWidTimer(Widget* pWid, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc);
 	BOOL KillWidTimer(Widget* pWid, UINT_PTR uIDEvent);
@@ -721,7 +751,7 @@ protected:
 typedef SharedPtr<Timer> PTimer;
 //////////////////////////////////////////////////////////////////////////
 // WidDispatch: dispatch messages for widget
-class WFX_API WidDispatch : public WidgetBase
+class WFX_API WidDispatch : public MsgMap
 {
 	friend class Widget;
 	friend class Timer;
@@ -742,13 +772,13 @@ protected:
 	void SetCapturedH2O(const std::pair<HWID, Widget*>& h2o);
 	Widget* GetObject(const std::pair<HWID, Widget*>& h2o);
 protected:
-	void DrawWid(Widget* pWid, const RECT& rcPaint);
-	void DrawGen(Widget* pWid, HDC hdc, const RECT& rcPaint);
-	void DrawBkgnd(Widget* pWid, HDC hdc, const RECT& rcPaint);
-	void OnPaint(const RECT& rcPaint);
-	void Invalidate(const RECT& rc);
+	void DrawWid(Widget* pWid, const Rect& rcPaint);
+	void DrawGen(Widget* pWid, HDC hdc, const Rect& rcPaint);
+	void DrawBkgnd(Widget* pWid, HDC hdc, const Rect& rcPaint);
+	void OnPaint(const Rect& rcPaint);
+	void Invalidate(const Rect& rc);
 protected:
-	void SetWidRect(Widget* pWid, const RECT& rc);
+	void SetWidRect(Widget* pWid, const Rect& rc);
 	void ShowWid(Widget* pWid, WORD wShow);
 public:
 	LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -773,7 +803,7 @@ public:
 public:
 	static HINSTANCE GetInstance();
 	static void SetInstance(HINSTANCE hInstance);
-	static RECT FromRect(const RECT& rc);
+	static Rect FromRect(const Rect& rc);
 protected:
 	HWND m_hWnd;
 	std::vector<HWID> m_rghWid;

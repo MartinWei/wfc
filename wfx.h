@@ -18,8 +18,8 @@
 #endif
 
 #define BEGIN_NAMESPACE_WFX	//namespace wfx {
-#define END_NAMESPACE_WFX		//}
-#define USING_NAMESPACE_WFX	//using namespace wfx
+#define END_NAMESPACE_WFX	//	}
+#define USING_NAMESPACE_WFX	//using namespace wfx;
 
 #include <xstring>
 #include <string>
@@ -43,8 +43,16 @@ DECLARE_HANDLE	(HWID);
 #define NULL 0
 #endif
 
-#ifndef ASSERT
-#define ASSERT(expr) _ASSERT(expr)
+#ifndef WFX_ASSERT
+#define WFX_ASSERT(expr) _ASSERT(expr)
+#endif
+
+#ifndef WFX_CONDITION
+#define WFX_CONDITION WFX_ASSERT
+#endif
+
+#ifndef WFX_CONDITION_VALID
+#define WFX_CONDITION_VALID(expr) WFX_CONDITION(expr != NULL)
 #endif
 
 #define SharedPtr  std::tr1::shared_ptr
@@ -81,8 +89,54 @@ public:
 #define WFX_DECLARE_FACTORY(classname) \
 	friend class Factory<classname>;
 
-#define WFX_OBJECT_FACTORY(classname) \
+#define WFX_CREATE_FACTORY(classname) \
 	SharedPtr<Factory<classname> >(new Factory<classname>())
+
+class WFX_API Rect : public tagRECT
+{
+public:
+	Rect();
+	Rect(const RECT& src);
+	Rect(LONG iLeft, LONG iTop, LONG iRight, LONG iBottom);
+
+	LONG GetWidth() const;
+	LONG GetHeight() const;
+	void Empty();
+	void Join(const RECT& rc);
+	void ResetOffset();
+	void Normalize();
+	void Offset(LONG cx, LONG cy);
+	void Inflate(LONG cx, LONG cy);
+	void Deflate(LONG cx, LONG cy);
+	void Union(Rect& rc);
+	operator LPRECT();
+	operator LPCRECT();
+	BOOL PtInRect(POINT pt) const;
+};
+
+class WFX_API Size : public tagSIZE
+{
+public:
+	Size();
+	Size(const SIZE& src);
+	Size(const RECT& rc);
+	Size(LONG cx, LONG cy);
+	Size(LPARAM lParam);
+	void Empty();
+	operator LPSIZE();
+
+};
+
+class WFX_API Point : public tagPOINT
+{
+public:
+	Point();
+	Point(const POINT& src);
+	Point(LONG x, LONG y);
+	Point(LPARAM lParam);
+	void Empty();
+	operator LPPOINT();
+};
 
 END_NAMESPACE_WFX
 
@@ -281,7 +335,7 @@ enum Wfx_LC_Param
 	break; \
 		default: \
 		TRACE(L"Invalid message map ID (%i)\n", dwMsgMapID); \
-		ASSERT(FALSE); \
+		WFX_CONDITION(FALSE); \
 		break; \
 } \
 	return FALSE; \
@@ -296,15 +350,13 @@ enum Wfx_LC_Param
 BEGIN_NAMESPACE_WFX
 
 typedef SharedPtr<Gdiplus::Image>				PImage;
-typedef SharedPtr<Gdiplus::StringFormat>		PStringFormat;
-typedef SharedPtr<Gdiplus::Font>				PFont;
+typedef SharedPtr<LOGFONTW>						PFont;
 
 enum Wid_Type
 {
 	WT_WIDGET,
 	WT_BUTTON,
 	WT_TEXTBOX,
-
 };
 
 END_NAMESPACE_WFX

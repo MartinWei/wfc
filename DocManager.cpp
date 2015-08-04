@@ -13,13 +13,10 @@
 #include "wfxwid.h"
 #include "wfxfrmwk.h"
 
+USING_NAMESPACE_WFX;
+
 DocManager::DocManager()
 : m_nCurrent(-1)
-{
-
-}
-
-DocManager::~DocManager()
 {
 
 }

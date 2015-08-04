@@ -15,15 +15,14 @@
 
 BEGIN_NAMESPACE_WFX
 
-class WidgetBase;
+class MsgMap;
+class Widget;
 class Document;
 class View;
 
 class WFX_API View : public Widget
 {
 	WFX_DECLARE_FACTORY(View);
-public:
-	virtual ~View();
 protected:
 	View();
 public:
@@ -38,11 +37,9 @@ typedef SharedPtr<ViewFactory>					PViewFactory;
 typedef const PViewFactory						CPViewFactroy;
 typedef SharedPtr<View>							PView;
 
-class WFX_API Document : public WidgetBase
+class WFX_API Document : public MsgMap
 {
 	WFX_DECLARE_FACTORY(Document);
-public:
-	virtual ~Document();
 protected:
 	Document();
 public:
@@ -68,11 +65,10 @@ typedef std::vector<Doc2ViewFactory>			Doc2ViewFactoryList;
 typedef std::pair<PDocutment, PView>			Doc2View;
 typedef SharedPtr<Doc2View>						PDoc2View;
 
-class WFX_API DocManager : public WidgetBase
+class WFX_API DocManager : public MsgMap
 {
 public:
 	DocManager();
-	virtual ~DocManager();
 public:
 	virtual BOOL ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		LRESULT& lResult, DWORD dwMsgMapID);
@@ -96,7 +92,6 @@ class WFX_API Frame : public Widget
 {
 public:
 	Frame();
-	virtual ~Frame();
 public:
 	virtual Document* GetActiveDoc();
 public:
@@ -108,11 +103,10 @@ protected:
 
 typedef SharedPtr<Frame> PFrame;
 
-class WFX_API App : public WidgetBase
+class WFX_API Application : public MsgMap
 {
 public:
-	App(HINSTANCE hInstance, PFrame pFrame = PFrame());
-	virtual ~App();
+	Application(HINSTANCE hInstance, PFrame pFrame = PFrame());
 protected:
 	void AddDocument(CPDocFactory& pDocFactory,
 		CPViewFactroy& pViewFactory);
@@ -125,5 +119,7 @@ protected:
 	PDocManager m_pDocMgr;
 	PFrame m_pFrame;
 };
+
+typedef SharedPtr<Application> PApplication;
 
 END_NAMESPACE_WFX

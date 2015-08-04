@@ -23,17 +23,12 @@ Button::Button(BOOL bCheckable /*= FALSE*/)
 	SetText(L"Button");
 }
 
-Button::~Button()
+void Button::OnDraw( HDC hdc, const Rect& rcPaint )
 {
-
-}
-
-void Button::OnDraw( HDC hdc, const RECT& rcPaint )
-{
-	SharedPtr<Gdiplus::Image> pImage = GetImageFromState();
+	PImage pImage = GetImageFromState();
 	if (pImage == NULL)
 	{
-		RECT rc = GetRect();
+		Rect rc = GetRect();
 		WfxRender::DrawButtton(hdc, GetText(), rc, GetState(), m_pDispatch);
 	}
 }

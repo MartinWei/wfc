@@ -28,10 +28,10 @@ void ComboWnd::OnInPlaceWindowKillFocus()
 HWND ComboWnd::CreateInPlaceWindow()
 {
 	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
-	ASSERT(pComboBox != NULL);
-	ASSERT(pComboBox->m_pDispatch != NULL);
-	RECT rcWid = pComboBox->GetRect();
-	RECT rc = rcWid;
+	WFX_CONDITION(pComboBox != NULL);
+	WFX_CONDITION(pComboBox->m_pDispatch != NULL);
+	Rect rcWid = pComboBox->GetRect();
+	Rect rc = rcWid;
 	rc.top = rc.bottom;
 	rc.bottom = rc.top + pComboBox->GetSize() * pComboBox->GetItemHeight(0);
 	MapWindowRect(pComboBox->m_pDispatch->GetHwnd(), HWND_DESKTOP, &rc);
@@ -52,9 +52,9 @@ LPCTSTR ComboWnd::GetWindowClassName() const
 LRESULT ComboWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
-	ASSERT(pComboBox != NULL);
-	ASSERT(pComboBox->m_pDispatch != NULL);
-	RECT rc;
+	WFX_CONDITION(pComboBox != NULL);
+	WFX_CONDITION(pComboBox->m_pDispatch != NULL);
+	Rect rc;
 	m_pRoot->Create(rc, m_pDispatch.get());
 	ULONG lItems = pComboBox->GetSize();
 	Widget* pChild = NULL;
@@ -74,12 +74,12 @@ LRESULT ComboWnd::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHand
 LRESULT ComboWnd::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	ComboBox* pComboBox = dynamic_cast<ComboBox*>(m_pOwner);
-	ASSERT(pComboBox != NULL);
-	ASSERT(pComboBox->m_pDispatch != NULL);
-	RECT rc = {0};
+	WFX_CONDITION(pComboBox != NULL);
+	WFX_CONDITION(pComboBox->m_pDispatch != NULL);
+	Rect rc;
 	GetClientRect(rc);
-	RECT rcWid = rc;
-	ASSERT(m_pRoot != NULL);
+	Rect rcWid = rc;
+	WFX_CONDITION(m_pRoot != NULL);
 	m_pRoot->SetRect(rcWid);
 	rcWid.bottom = rcWid.top + 30;
 	ULONG lItems = pComboBox->GetSize();

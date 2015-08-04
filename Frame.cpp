@@ -19,11 +19,6 @@ Frame::Frame()
 
 }
 
-Frame::~Frame()
-{
-
-}
-
 Document* Frame::GetActiveDoc()
 {
 	return NULL;

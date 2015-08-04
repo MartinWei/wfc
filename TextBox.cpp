@@ -18,14 +18,14 @@ USING_NAMESPACE_WFX;
 HWND TextBoxWnd::CreateInPlaceWindow()
 {
 	TextBox* pTextBox = dynamic_cast<TextBox*>(m_pOwner);
-	ASSERT(pTextBox != NULL);
-	ASSERT(pTextBox->m_pDispatch != NULL);
-	RECT rcWid = pTextBox->GetRect();
-	RECT rc = rcWid;
+	WFX_CONDITION(pTextBox != NULL);
+	WFX_CONDITION(pTextBox->m_pDispatch != NULL);
+	Rect rcWid = pTextBox->GetRect();
+	Rect rc = rcWid;
 	::InflateRect(&rc, -1, -3);
 	Create(m_pOwner->m_pDispatch->GetHwnd(),
 		NULL, WS_CHILD, ES_AUTOHSCROLL, rc);
-	SetFont(m_pOwner->GetFontObject());
+	SetFont(WfxRender::GetFontObject());
 	SetText(m_pOwner->GetText());
 	Edit_SetModify(m_hWnd, FALSE);
 	SendMessageW(EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(2, 2));
@@ -104,7 +104,7 @@ BOOL TextBox::Initial()
 	return FALSE;
 }
 
-void TextBox::OnDraw(HDC hdc, const RECT& rcPaint)
+void TextBox::OnDraw(HDC hdc, const Rect& rcPaint)
 {
 	WfxRender::DrawTextBox(hdc, GetText(), GetRect(), GetState(), GetMode(), m_pDispatch);
 }

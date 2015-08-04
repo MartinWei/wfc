@@ -14,7 +14,7 @@
 
 USING_NAMESPACE_WFX;
 
-App::App( HINSTANCE hInstance, PFrame pFrame /*= PFrame()*/ )
+Application::Application( HINSTANCE hInstance, PFrame pFrame /*= PFrame()*/ )
 : m_hInstance(hInstance)
 , m_pDocMgr(new DocManager)
 , m_pFrame(pFrame)
@@ -22,27 +22,22 @@ App::App( HINSTANCE hInstance, PFrame pFrame /*= PFrame()*/ )
 
 }
 
-App::~App()
+void Application::AddDocument( CPDocFactory& pDocFactory, CPViewFactroy& pViewFactory )
 {
 
 }
 
-void App::AddDocument( CPDocFactory& pDocFactory, CPViewFactroy& pViewFactory )
-{
-
-}
-
-BOOL App::InitInstance()
+BOOL Application::InitInstance()
 {
 	return FALSE;
 }
 
-int App::ExitInstance()
+int Application::ExitInstance()
 {
 	return 1;
 }
 
-int App::Run()
+int Application::Run()
 {
 	return 1;
 }

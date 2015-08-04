@@ -14,35 +14,129 @@
 
 USING_NAMESPACE_WFX;
 
-LRESULT WidgetBase::SendWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT MsgMap::SendWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lResult = 0;
 	ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 	return lResult;
 }
 
+AttrBase::AttrBase(Widget* pParent /*= NULL*/)
+: m_strText(L"")
+, m_dwFormat(DT_SINGLELINE | DT_VCENTER | DT_LEFT)
+, m_clrText(WID_TEXT_STATIC)
+, m_clrBkgnd(WID_BKGND_STATIC)
+, m_clrFrame(WID_FRAME_STATIC)
+, m_wState(WID_STATE_STATIC)
+, m_pParent(pParent)
+{
+
+}
+
+void AttrBase::SetText( const String& strText )
+{
+	m_strText = strText;
+}
+
+String AttrBase::GetText() const
+{
+	return m_strText;
+}
+
+void AttrBase::SetFormat( DWORD dwFormat )
+{
+	m_dwFormat = dwFormat;
+}
+
+DWORD AttrBase::GetFormat() const
+{
+	return m_dwFormat;
+}
+
+void AttrBase::SetTextColor( COLORREF clrText )
+{
+	m_clrText = clrText;
+}
+
+COLORREF AttrBase::GetTextColor() const
+{
+	return m_clrText;
+}
+
+void AttrBase::SetBkgnd( COLORREF clrBkgnd )
+{
+	m_clrBkgnd = clrBkgnd;
+}
+
+COLORREF AttrBase::GetBkgnd() const
+{
+	return m_clrBkgnd;
+}
+
+void AttrBase::SetFrame( COLORREF clrFrame )
+{
+	m_clrFrame = clrFrame;
+}
+
+COLORREF AttrBase::GetFrame() const
+{
+	return m_clrFrame;
+}
+
+void AttrBase::SetImage( const String& strImage )
+{
+	m_pImg.reset(Gdiplus::Image::FromFile(strImage.c_str()));
+}
+
+PImage AttrBase::GetImage() const
+{
+	return m_pImg;
+}
+
+void AttrBase::SetState( WORD wState )
+{
+	m_wState = wState;
+}
+
+WORD AttrBase::GetState() const
+{
+	return m_wState;
+}
+
+void AttrBase::SetRect( const Rect& rect )
+{
+	m_rect = rect;
+}
+
+Rect AttrBase::GetRect() const
+{
+	return m_rect;
+}
+
+Widget* AttrBase::GetParent() const
+{
+	return m_pParent;
+}
+
+void AttrBase::SetParent( Widget* pParent )
+{
+	m_pParent = pParent;
+}
+
 Widget::Widget(void)
 : m_bNC(FALSE)
-, m_pParent(NULL)
 , m_pDispatch(NULL)
-, m_wState(WID_STATE_STATIC)
 , m_hWid(INVALID_HWID)
 , m_pVScrollbar(NULL)
 , m_pHScrollbar(NULL)
-, m_strText(WID_DEFAULT_TEXT)
 , m_uBarFlag(WESB_NONE)
 , m_wShow(SW_SHOW)
-, m_clrBkgnd(WID_BKGND_STATIC)
-, m_clrFrame(WID_FRAME_STATIC)
-, m_clrText(WID_TEXT_STATIC)
 , m_nHorzPosOffset(0)
 , m_nVertPosOffset(0)
 , m_bVirtualSizeValid(FALSE)
 , m_nID(0)
 {
-	m_pFont.reset(new LOGFONTW);
-	memset(&m_rcWid, 0, sizeof(RECT));
-	memset(&m_rcDraw, 0, sizeof(RECT));
+	
 }
 
 Widget::~Widget(void)
@@ -55,37 +149,32 @@ Widget::~Widget(void)
 	TDEL(m_pHScrollbar);
 }
 
-RECT Widget::GetRect() const 
+void Widget::SetRect( const Rect& rc )
 {
-	return m_rcWid;
-}
-
-void Widget::SetRect( const RECT& rc )
-{
-	m_rcWid = rc;
+	AttrBase::SetRect(rc);
 	m_pDispatch->SetWidRect(this, rc);
 }
 
-RECT Widget::GetParentRect() const
+Rect Widget::GetParentRect() const
 {
-	RECT rcParent = {0};
+	Rect rcParent;
 	if (m_pParent != NULL)
 	{
 		rcParent = m_pParent->GetRect();
 	}
 	else
 	{
-		ASSERT(m_pDispatch != NULL);
-		ASSERT(::IsWindow(m_pDispatch->GetHwnd()));
+		WFX_CONDITION(m_pDispatch != NULL);
+		WFX_CONDITION(::IsWindow(m_pDispatch->GetHwnd()));
 		::GetClientRect(m_pDispatch->GetHwnd(), &rcParent);
 	}
 	return rcParent;
 }
 
-BOOL Widget::Create( const RECT& rc, WidDispatch* pDispatch, 
+BOOL Widget::Create( const Rect& rc, WidDispatch* pDispatch, 
 					Widget* pParent /*= NULL*/, BOOL bNC /*= FALSE*/ )
 {
-	ASSERT(pDispatch != NULL);
+	WFX_CONDITION(pDispatch != NULL);
 	m_pDispatch = pDispatch;
 	m_pDispatch->Create(this);
 	m_bNC = bNC;
@@ -95,14 +184,9 @@ BOOL Widget::Create( const RECT& rc, WidDispatch* pDispatch,
 	return TRUE;
 }
 
-Widget* Widget::GetParent() const
-{
-	return m_pParent;
-}
-
 void Widget::SetParent( Widget* pParent )
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->SetParent(this, pParent);
 }
 
@@ -124,18 +208,19 @@ BOOL Widget::HasChild() const
 
 void Widget::InvalidWid()
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->Invalidate(GetRect());
 }
 
-void Widget::OnDraw( HDC hdc, const RECT& rcPaint )
+void Widget::OnDraw( HDC hdc, const Rect& rcPaint )
 {
-	RECT rc = m_rcWid;
-	rc.left = m_rcWid.left - m_nHorzPosOffset;
-	rc.top = m_rcWid.top - m_nVertPosOffset;
-	WfxRender::DrawSolidRect(hdc, m_rcWid, WID_BKGND_STATIC, m_pDispatch);
-	WfxRender::DrawText(hdc, rc, m_strText, RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
-	WfxRender::DrawFrame(hdc, m_rcWid, WBTN_BKGND_MOUSE, m_pDispatch);
+	Rect rcWid = GetRect();
+	Rect rc = rcWid;
+	rc.left = rc.left - m_nHorzPosOffset;
+	rc.top = rc.top - m_nVertPosOffset;
+	WfxRender::DrawSolidRect(hdc, rc, WID_BKGND_STATIC, m_pDispatch);
+	WfxRender::DrawText(hdc, rc, GetText(), RGB(255, 0, 0), DT_VCENTER | DT_SINGLELINE | DT_LEFT, NULL, m_pDispatch);
+	WfxRender::DrawFrame(hdc, rcWid, WBTN_BKGND_MOUSE, m_pDispatch);
 }
 
 void Widget::SetHwid( HWID hWid )
@@ -177,7 +262,7 @@ void Widget::SetMyParent( Widget* pParent )
 
 void Widget::EnableScrollBar( UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->EnableScrollBar(this, uBarFlag, bEnable);
 }
 
@@ -203,36 +288,22 @@ void Widget::SetScrollBar( int nBar, ScrollBar* pScrollBar )
 	}
 }
 
-void Widget::SetText( const String& strText )
-{
-	m_strText = strText;
-}
-
-String Widget::GetText() const
-{
-	return m_strText;
-}
 
 void Widget::SetState( WORD wState )
 {
-	if (wState == m_wState)
+	if (wState == GetState())
 	{
 		return;
 	}
 
-	m_wState = wState;
+	AttrBase::SetState(wState);
 
-	SendWidMessage(WM_UPDATEUISTATE, m_wState);
-}
-
-WORD Widget::GetState() const
-{
-	return m_wState;
+	SendWidMessage(WM_UPDATEUISTATE, wState);
 }
 
 void Widget::ShowWid( WORD wShow )
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->ShowWid(this, wShow);
 	if (IsShow())
 	{
@@ -248,14 +319,14 @@ BOOL Widget::PostWidMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*=
 
 UINT_PTR Widget::SetWidTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc )
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->SetWidTimer(this, nIDEvent, uElapse, lpTimerFunc);
 	return 1;
 }
 
 BOOL Widget::KillWidTimer( UINT_PTR uIDEvent )
 {
-	ASSERT(FALSE);
+	WFX_CONDITION(FALSE);
 	return m_pDispatch->KillWidTimer(this, uIDEvent);
 }
 
@@ -319,13 +390,13 @@ Widget::operator HWID() const
 
 void Widget::SetCapture()
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->SetCapture(this);
 }
 
 void Widget::ReleaseCapture()
 {
-	ASSERT(m_pDispatch != NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
 	m_pDispatch->ReleaseCapture();
 }
 
@@ -417,15 +488,16 @@ void Widget::SetVirtualSizeValid( BOOL bValid /*= TRUE*/ )
 	m_bVirtualSizeValid = bValid;
 }
 
-SIZE Widget::EstimateVirualSize()
+Size Widget::EstimateVirualSize()
 {
-	return WfxRender::EstimateWidgetSize(m_rcWid, 
-		m_strText, m_wState, m_pDispatch);
+	return WfxRender::EstimateWidgetSize(GetRect(), 
+		GetText(), GetState(), m_pDispatch);
 }
 
 LRESULT Widget::OnQueryVisualSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	return MAKELRESULT(m_rcWid.right - m_rcWid.left, m_rcWid.bottom - m_rcWid.top);
+	Rect rcWid = GetRect();
+	return MAKELRESULT(rcWid.GetWidth(), rcWid.GetHeight());
 }
 
 LRESULT Widget::OnScrollBarOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
@@ -442,7 +514,7 @@ LRESULT Widget::OnScrollBarOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 	TRACE(L"nPos = %d", psinfo->nPos);
 	float fOffset = 0;
-	RECT rcDraw = GetDrawRect();
+	Rect rcDraw = GetDrawRect();
 	if (wParam == SB_HORZ)
 	{
 		fOffset = (rcDraw.right - rcDraw.left) * (float)psinfo->nPos / (float)(psinfo->nMax - psinfo->nMin);
@@ -464,11 +536,6 @@ LRESULT Widget::OnHScroll( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 	return 1;
 }
 
-HFONT Widget::GetFontObject() const
-{
-	return WfxRender::GetFontObject();
-}
-
 LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
 	if (m_pParent != NULL)
@@ -476,12 +543,12 @@ LRESULT Widget::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lPar
 	return 0;
 }
 
-RECT Widget::GetDrawRect() const
+Rect Widget::GetDrawRect() const
 {
 	return m_rcDraw;
 }
 
-void Widget::SetDrawRect( const RECT& rc )
+void Widget::SetDrawRect( const Rect& rc )
 {
 	m_rcDraw = rc;
 }
@@ -506,7 +573,7 @@ void Widget::SetHOffset( LONG nOffset )
 	m_nHorzPosOffset = nOffset;
 }
 
-SIZE Widget::GetVirtualSize() const
+Size Widget::GetVirtualSize() const
 {
 	return m_szVirtual;
 }
@@ -519,6 +586,24 @@ UINT Widget::GetID() const
 void Widget::SetID( UINT nID )
 {
 	m_nID = nID;
+}
+
+UnitBase::UnitBase(Widget* pWid /*= NULL*/)
+: AttrBase(pWid)
+{
+
+}
+
+BOOL UnitBase::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
+{
+	return TRUE;
+}
+
+LRESULT UnitBase::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
+{
+	if (m_pParent != NULL)
+		return m_pParent->SendWidMessage(uMsg, wParam, lParam);
+	return 0;
 }
 
 ScrollBar::ScrollBar( int nBar )
@@ -555,7 +640,7 @@ void ScrollBar::SetBar( int nBar )
 
 void ScrollBar::GetScrollInfo( SCROLLINFO* pScrollInfo ) const
 {
-	ASSERT(pScrollInfo != NULL);
+	WFX_CONDITION(pScrollInfo != NULL);
 	if (pScrollInfo->cbSize == sizeof(SCROLLINFO))
 	{
 		memcpy(pScrollInfo, m_pScrollInfo.get(), sizeof(SCROLLINFO));
@@ -564,7 +649,7 @@ void ScrollBar::GetScrollInfo( SCROLLINFO* pScrollInfo ) const
 
 void ScrollBar::SetScrollInfo( const SCROLLINFO* pScrollInfo )
 {
-	ASSERT(pScrollInfo != NULL);
+	WFX_CONDITION(pScrollInfo != NULL);
 	if (pScrollInfo->cbSize == sizeof(SCROLLINFO))
 	{
 		memcpy(m_pScrollInfo.get(), pScrollInfo, sizeof(SCROLLINFO));
@@ -573,7 +658,7 @@ void ScrollBar::SetScrollInfo( const SCROLLINFO* pScrollInfo )
 
 void ScrollBar::SetRange( int nMax, int nMin )
 {
-	ASSERT(m_pScrollInfo != NULL);
+	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (m_pScrollInfo->cbSize == sizeof(SCROLLINFO))
 	{
 		m_pScrollInfo->nMax = nMax;
@@ -583,11 +668,11 @@ void ScrollBar::SetRange( int nMax, int nMin )
 
 LRESULT ScrollBar::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	ASSERT(m_pDispatch != NULL);
-	ASSERT(m_pArrow1 != NULL);
-	ASSERT(m_pArrow2 != NULL);
-	ASSERT(m_pSlider != NULL);
-	RECT rc = {0};
+	WFX_CONDITION(m_pDispatch != NULL);
+	WFX_CONDITION(m_pArrow1 != NULL);
+	WFX_CONDITION(m_pArrow2 != NULL);
+	WFX_CONDITION(m_pSlider != NULL);
+	Rect rc;
 	m_pArrow1->Create(rc, m_pDispatch, this);
 	m_pArrow2->Create(rc, m_pDispatch, this);
 	m_pSlider->Create(rc, m_pDispatch, this);
@@ -596,9 +681,9 @@ LRESULT ScrollBar::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 
 LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	RECT rcWid = {0};
+	Rect rcWid;
 	rcWid = GetRect();
-	RECT rc = rcWid;
+	Rect rc = rcWid;
 	rc.left += m_nSAMargin;
 
 	if (SB_VERT == m_nBar)
@@ -614,7 +699,7 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 	rc.top += m_nSAMargin;
 
-	RECT rcArrow1 = rc;
+	Rect rcArrow1 = rc;
 	m_pArrow1->SetRect(rcArrow1);
 
 	rc = rcWid;
@@ -634,14 +719,14 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 		rc.top += m_nSAMargin;
 	}
 
-	RECT rcArrow2 = rc;
+	Rect rcArrow2 = rc;
 	m_pArrow2->SetRect(rcArrow2);
 
 	rc = rcWid;
 
 	float fSliderSize = CalcSliderSize();
 	
-	RECT rcSliserMax = rcWid;
+	Rect rcSliserMax = rcWid;
 	
 	if (SB_HORZ == m_nBar)
 	{
@@ -667,7 +752,7 @@ LRESULT ScrollBar::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 LRESULT ScrollBar::OnSliderOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	int nOffset = (int)wParam;
-	RECT rcSlider = m_pSlider->GetRect();
+	Rect rcSlider = m_pSlider->GetRect();
 	int nMin = GetSliderMin();
 	int nMax = GetSliderMax();
 	if (m_nBar == SB_HORZ)
@@ -707,18 +792,15 @@ LRESULT ScrollBar::OnSliderOffset( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
 float ScrollBar::CalcSliderSize()
 {
-	ASSERT(m_pScrollInfo != NULL);
+	WFX_CONDITION(m_pScrollInfo != NULL);
 	if (GetParent() == NULL)
 	{
 		return 0.0;
 	}
 
-	RECT rcWid = GetRect(); 
-	LRESULT lResult = SendParentMessage(WUM_GET_VIRTUAL_SIZE);
-	SIZE szVirtual = {LOWORD(lResult), HIWORD(lResult)};
-
-	lResult = SendParentMessage(WUM_GET_VISUAL_SIZE);
-	SIZE szVisual = {LOWORD(lResult), HIWORD(lResult)};
+	Rect rcWid = GetRect(); 
+	Size szVirtual(SendParentMessage(WUM_GET_VIRTUAL_SIZE));
+	Size szVisual(SendParentMessage(WUM_GET_VISUAL_SIZE));
 
 	LONG nOffset = 2 * m_nArrorSize - 2 * m_nSAMargin;
 	LONG nVirtualSize = SB_VERT == m_nBar? szVirtual.cy : szVirtual.cx;	
@@ -739,7 +821,7 @@ float ScrollBar::CalcSliderSize()
 
 void ScrollBar::SetPos( int nPos )
 {
-	ASSERT(m_pScrollInfo != NULL);
+	WFX_CONDITION(m_pScrollInfo != NULL);
 	BOOL bFurther = nPos > m_pScrollInfo->nPos;
 	if (m_pScrollInfo->nPos != nPos)
 	{
@@ -762,11 +844,11 @@ void ScrollBar::SetPos( int nPos )
 
 int ScrollBar::GetPos() const
 {
-	ASSERT(m_pScrollInfo != NULL);
+	WFX_CONDITION(m_pScrollInfo != NULL);
 	return m_pScrollInfo->nPos;
 }
 
-int ScrollBar::CalcSliderPos( const RECT& rcSlider )
+int ScrollBar::CalcSliderPos( const Rect& rcSlider )
 {
 	int nMaxSlider = GetSliderMax() - m_nSliderSize / 2;
 	int nMinSlider = GetSliderMin() + m_nSliderSize / 2;;
@@ -776,9 +858,9 @@ int ScrollBar::CalcSliderPos( const RECT& rcSlider )
 	return 0;
 }
 
-RECT ScrollBar::CalcSliderRect(const RECT& rcMaxSlider)
+Rect ScrollBar::CalcSliderRect(const Rect& rcMaxSlider)
 {
-	RECT rcSlider = rcMaxSlider;
+	Rect rcSlider = rcMaxSlider;
 	int nMid = 0;
 	if (m_nBar == SB_HORZ)
 	{
@@ -818,7 +900,7 @@ RECT ScrollBar::CalcSliderRect(const RECT& rcMaxSlider)
 
 int ScrollBar::GetSliderMax()
 {
-	RECT rcWid = GetRect();
+	Rect rcWid = GetRect();
 	if (m_nBar == SB_HORZ)
 		return rcWid.right - m_nArrorSize - m_nSAMargin;
 	else
@@ -827,7 +909,7 @@ int ScrollBar::GetSliderMax()
 
 int ScrollBar::GetSliderMin()
 {
-	RECT rcWid = GetRect();
+	Rect rcWid = GetRect();
 	if (m_nBar == SB_HORZ)
 		return rcWid.left + m_nArrorSize + m_nSAMargin;
 	else
@@ -836,7 +918,7 @@ int ScrollBar::GetSliderMin()
 
 int ScrollBar::GetSlierMid()
 {
-	RECT rcSlider = m_pSlider->GetRect();
+	Rect rcSlider = m_pSlider->GetRect();
 	if (m_nBar == SB_HORZ)
 		return rcSlider.left + m_nSliderSize / 2;
 	else
@@ -848,7 +930,6 @@ Slider::Slider( int nBar )
 , m_bInSlider(FALSE)
 , m_bLButtonDown(FALSE)
 {
-	memset(&m_ptLButtonDown, 0, sizeof(POINT));
 }
 
 Slider::~Slider()
@@ -875,13 +956,13 @@ LRESULT Slider::OnLButtonUp( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
 	int nOffset = 0.00;
-	POINT pt = {0};
+	POINT pt;
 	pt.x = GET_X_LPARAM(lParam);
 	pt.y = GET_Y_LPARAM(lParam);
 
 	if (m_bLButtonDown)
 	{
-		RECT rc = GetParentRect();
+		Rect rc = GetParentRect();
 		if (SB_VERT == m_nBar)
 		{
 			if (pt.y < rc.top || pt.y > rc.bottom)
@@ -904,7 +985,7 @@ LRESULT Slider::OnMouseMove( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 	return 0;
 }
 
-void Slider::OnDraw( HDC hdc, const RECT& rcPaint )
+void Slider::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	WfxRender::DrawSlider(hdc, GetRect(), GetState(), m_pDispatch);
 }
@@ -921,9 +1002,9 @@ UINT_PTR Timer::SetWidTimer( Widget* pWid,
 								   UINT_PTR nIDEvent, UINT uElapse, 
 								   TIMERPROC lpTimerFunc )
 {
-	ASSERT(m_pDispatch != NULL);
-	ASSERT(pWid != NULL);
-	ASSERT(uElapse > 0);
+	WFX_CONDITION(m_pDispatch != NULL);
+	WFX_CONDITION(pWid != NULL);
+	WFX_CONDITION(uElapse > 0);
 	PTimerInfo pTI(new TimerInfo);
 	pTI->m_pSender.first = pWid->GetHwid();
 	pTI->m_pSender.second = pWid;
@@ -936,8 +1017,8 @@ UINT_PTR Timer::SetWidTimer( Widget* pWid,
 
 BOOL Timer::KillWidTimer( Widget* pWid, UINT_PTR uIDEvent )
 {
-	ASSERT(m_pDispatch != NULL);
-	ASSERT(pWid!=NULL);
+	WFX_CONDITION(m_pDispatch != NULL);
+	WFX_CONDITION(pWid!=NULL);
 	PTimerInfo pTimer;
 	for( TimerIter it = m_rgpTimers.begin(); it != m_rgpTimers.end(); ++it ) 
 	{
@@ -982,11 +1063,6 @@ void Timer::Destroy( Widget* pWid )
 
 }
 
-Timer::~Timer()
-{
-
-}
-
 ImageWid::ImageWid()
 {
 
@@ -1001,11 +1077,6 @@ ImageWid::ImageWid(const String& strStatic,
 				   , m_pPush(Gdiplus::Image::FromFile(strPush.c_str()))
 				   , m_pChecked(Gdiplus::Image::FromFile(strChecked.c_str()))
 {
-}
-
-ImageWid::~ImageWid()
-{
-
 }
 
 void ImageWid::SetImage( WORD wState, const String& strImage )
@@ -1025,7 +1096,7 @@ void ImageWid::SetImage( WORD wState, const String& strImage )
 		m_pChecked.reset(Gdiplus::Image::FromFile(strImage.c_str()));
 		break;
 	default:
-		ASSERT(FALSE);
+		WFX_CONDITION(FALSE);
 	}
 }
 
@@ -1040,9 +1111,9 @@ void ImageWid::SetImage( const String& strStatic,
 	m_pChecked.reset(Gdiplus::Image::FromFile(strChecked.c_str()));
 }
 
-SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
+PImage ImageWid::GetImageFromState()
 {
-	SharedPtr<Gdiplus::Image> pImage;
+	PImage pImage;
 	switch(GetState())
 	{
 	case WID_STATE_STATIC:
@@ -1058,7 +1129,7 @@ SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
 		pImage = m_pChecked;
 		break;
 	default:
-		ASSERT(FALSE);
+		WFX_CONDITION(FALSE);
 		pImage = m_pStatic;
 	}
 	return pImage;
@@ -1066,11 +1137,6 @@ SharedPtr<Gdiplus::Image> ImageWid::GetImageFromState()
 
 InPlaceWid::InPlaceWid()
 : m_pWindow(NULL)
-{
-
-}
-
-InPlaceWid::~InPlaceWid()
 {
 
 }

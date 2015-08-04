@@ -15,3 +15,4 @@
 #include "wfxrender.h"
 #include "wfxcmn.h"
 #include "wfxlayout.h"
+#include "wfxtabctrl.h"

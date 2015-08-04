@@ -39,7 +39,7 @@ Window::operator HWND() const
 
 BOOL Window::RegisterWindowClass()
 {
-	WNDCLASSW wc = { 0 };
+	WNDCLASSW wc;
 	wc.style = GetClassStyle();
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
@@ -52,7 +52,7 @@ BOOL Window::RegisterWindowClass()
 	wc.lpszClassName = GetWindowClassName();
 	ATOM ret = ::RegisterClassW(&wc);
 	DWORD dwError = ::GetLastError();
-	ASSERT(ret!=NULL || ::GetLastError()==ERROR_CLASS_ALREADY_EXISTS);
+	WFX_CONDITION(ret!=NULL || ::GetLastError()==ERROR_CLASS_ALREADY_EXISTS);
 	return ret != NULL || ::GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
 }
 
@@ -60,11 +60,11 @@ BOOL Window::RegisterSuperClass()
 {
 	// Get the class information from an existing
 	// window so we can subclass it later on...
-	WNDCLASSEXW wc = { 0 };
+	WNDCLASSEXW wc;
 	wc.cbSize = sizeof(WNDCLASSEX);
 	if( !::GetClassInfoEx(NULL, GetSuperClassName(), &wc) ) {
 		if( !::GetClassInfoEx(NULL, GetSuperClassName(), &wc) ) {
-			ASSERT(!L"Unable to locate window class");
+			WFX_CONDITION(!L"Unable to locate window class");
 			return NULL;
 		}
 	}
@@ -74,25 +74,25 @@ BOOL Window::RegisterSuperClass()
 	wc.lpszClassName = GetWindowClassName();
 	ATOM ret = ::RegisterClassExW(&wc);
 	DWORD dwError = ::GetLastError();
-	ASSERT(ret!=NULL || ::GetLastError()==ERROR_CLASS_ALREADY_EXISTS);
+	WFX_CONDITION(ret!=NULL || ::GetLastError()==ERROR_CLASS_ALREADY_EXISTS);
 	return ret != NULL || ::GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
 }
 
-HWND Window::Create( HWND hwndParent, LPCTSTR pszName, DWORD dwStyle, DWORD dwExStyle, const RECT& rc, HMENU hMenu /*= NULL*/ )
+HWND Window::Create( HWND hwndParent, LPCTSTR pszName, DWORD dwStyle, DWORD dwExStyle, const Rect& rc, HMENU hMenu /*= NULL*/ )
 {
 	if( GetSuperClassName() != NULL && !RegisterSuperClass() ) return NULL;
 	if( GetSuperClassName() == NULL && !RegisterWindowClass() ) return NULL;
 	LPCTSTR pszWindowClassName = GetWindowClassName();
 	m_hWnd = ::CreateWindowEx(dwExStyle, pszWindowClassName, pszName, dwStyle, 
 		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hwndParent, hMenu, WidDispatch::GetInstance(), this);
-	ASSERT(m_hWnd!=NULL);
+	WFX_CONDITION(m_hWnd!=NULL);
 	return m_hWnd;
 }
 
 HWND Window::SubClass( HWND hWnd )
 {
-	ASSERT(::IsWindow(hWnd));
-	ASSERT(m_hWnd==NULL);
+	WFX_CONDITION(::IsWindow(hWnd));
+	WFX_CONDITION(m_hWnd==NULL);
 	m_OldWndProc = SubclassWindow(hWnd, __WndProc);
 	if( m_OldWndProc == NULL ) return NULL;
 	m_bSubclassed = TRUE;
@@ -102,7 +102,7 @@ HWND Window::SubClass( HWND hWnd )
 
 void Window::UnSubClass()
 {
-	ASSERT(::IsWindow(m_hWnd));
+	WFX_CONDITION(::IsWindow(m_hWnd));
 	if( !::IsWindow(m_hWnd) ) return;
 	if( !m_bSubclassed ) return;
 	SubclassWindow(m_hWnd, m_OldWndProc);
@@ -112,7 +112,7 @@ void Window::UnSubClass()
 
 void Window::ShoWidWnd( BOOL bShow /*= TRUE*/, BOOL bTakeFocus /*= TRUE*/ )
 {
-	ASSERT(::IsWindow(m_hWnd));
+	WFX_CONDITION(::IsWindow(m_hWnd));
 	if( !::IsWindow(m_hWnd) ) return;
 	::ShowWindow(m_hWnd, bShow ? (bTakeFocus ? SW_SHOWNORMAL : SW_SHOWNOACTIVATE) : SW_HIDE);
 }
@@ -124,19 +124,19 @@ BOOL Window::ShowModal()
 
 void Window::Close()
 {
-	ASSERT(::IsWindow(m_hWnd));
+	WFX_CONDITION(::IsWindow(m_hWnd));
 	if( !::IsWindow(m_hWnd) ) return;
 	PostMessage(WM_CLOSE);
 }
 
 void Window::CenterWindow()
 {
-	ASSERT(::IsWindow(m_hWnd));
-	ASSERT((GetWindowStyle(m_hWnd)&WS_CHILD)==0);
-	RECT rcDlg = { 0 };
+	WFX_CONDITION(::IsWindow(m_hWnd));
+	WFX_CONDITION((GetWindowStyle(m_hWnd)&WS_CHILD)==0);
+	Rect rcDlg;
 	::GetWindowRect(m_hWnd, &rcDlg);
-	RECT rcArea = { 0 };
-	RECT rcCenter = { 0 };
+	Rect rcArea;
+	Rect rcCenter;
 	HWND hWndParent = ::GetParent(m_hWnd);
 	HWND hWndCenter = ::GetWindowOwner(m_hWnd);
 	::SystemParametersInfo(SPI_GETWORKAREA, NULL, &rcArea, NULL);
@@ -160,10 +160,10 @@ void Window::CenterWindow()
 void Window::SetIcon( UINT nRes )
 {
 	HICON hIcon = (HICON)::LoadImage(NULL, MAKEINTRESOURCE(nRes), IMAGE_ICON, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR);
-	ASSERT(hIcon);
+	WFX_CONDITION(hIcon);
 	::SendMessage(m_hWnd, WM_SETICON, (WPARAM) TRUE, (LPARAM) hIcon);
 	hIcon = (HICON)::LoadImage(NULL, MAKEINTRESOURCE(nRes), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
-	ASSERT(hIcon);
+	WFX_CONDITION(hIcon);
 	::SendMessage(m_hWnd, WM_SETICON, (WPARAM) FALSE, (LPARAM) hIcon);
 }
 
@@ -179,20 +179,20 @@ UINT Window::GetClassStyle() const
 
 LRESULT Window::SendMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
-	ASSERT(::IsWindow(m_hWnd));
+	WFX_CONDITION(::IsWindow(m_hWnd));
 	return ::SendMessage(m_hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT Window::PostMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/ )
 {
-	ASSERT(::IsWindow(m_hWnd));
+	WFX_CONDITION(::IsWindow(m_hWnd));
 	return ::PostMessage(m_hWnd, uMsg, wParam, lParam);
 }
 
 void Window::ResizeClient( int cx /*= -1*/, int cy /*= -1*/ )
 {
-	ASSERT(::IsWindow(m_hWnd));
-	RECT rc = { 0 };;
+	WFX_CONDITION(::IsWindow(m_hWnd));
+	Rect rc;;
 	if( !::GetClientRect(m_hWnd, &rc) ) return;
 	if( cx != -1 ) rc.right = cx;
 	if( cy != -1 ) rc.bottom = cy;
@@ -269,7 +269,7 @@ LRESULT CALLBACK Window::__ControlProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 
 String Window::GetText() const
 {
-	ASSERT(m_hWnd != NULL);
+	WFX_CONDITION(m_hWnd != NULL);
 	int nLen = GetWindowTextLengthW(m_hWnd) + 1;
 	String strText;
 	WCHAR* pszText = new WCHAR[nLen];
@@ -287,7 +287,7 @@ void Window::SetFont( HFONT hFont ) const
 
 void Window::SetText( const String& strText )
 {
-	ASSERT(m_hWnd != NULL);
+	WFX_CONDITION(m_hWnd != NULL);
 	::SetWindowTextW(m_hWnd, strText.c_str());
 }
 
@@ -301,9 +301,9 @@ BOOL Window::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& l
 	return TRUE;
 }
 
-void Window::GetClientRect( RECT& rc )
+void Window::GetClientRect( Rect& rc )
 {
-	ASSERT(m_hWnd != NULL);
+	WFX_CONDITION(m_hWnd != NULL);
 	::GetClientRect(m_hWnd, &rc);
 }
 
@@ -317,14 +317,9 @@ InPlaceWnd::InPlaceWnd()
 
 }
 
-InPlaceWnd::~InPlaceWnd()
-{
-
-}
-
 BOOL InPlaceWnd::Initial( InPlaceWid* pOwner )
 {
-	ASSERT(pOwner != NULL);
+	WFX_CONDITION(pOwner != NULL);
 	m_pOwner = pOwner;
 	CreateInPlaceWindow();
 	if (m_hWnd != NULL)

@@ -15,7 +15,7 @@
 
 USING_NAMESPACE_WFX;
 
-void RadioButtonItem::OnDraw( HDC hdc, const RECT& rcPaint )
+void RadioButtonItem::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	SharedPtr<Gdiplus::Image> pImage = GetImage();
 	if (pImage != NULL)

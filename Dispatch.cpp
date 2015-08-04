@@ -44,16 +44,16 @@ HWND WidDispatch::GetHwnd() const
 
 BOOL WidDispatch::Create( Widget* pThis )
 {
-	ASSERT(pThis != NULL);
-	ASSERT(pThis->GetHwid() == INVALID_HWID);
+	WFX_CONDITION(pThis != NULL);
+	WFX_CONDITION(pThis->GetHwid() == INVALID_HWID);
 	if (pThis->GetHwid() != INVALID_HWID)
 	{
 		return FALSE;
 	}
 	HWID hNewWid = GenerateHwid();
-	ASSERT(hNewWid != INVALID_HWID);
+	WFX_CONDITION(hNewWid != INVALID_HWID);
 	pThis->SetHwid(hNewWid);
-	ASSERT(m_Handle2Object.find(hNewWid) == m_Handle2Object.end());
+	WFX_CONDITION(m_Handle2Object.find(hNewWid) == m_Handle2Object.end());
 	m_Handle2Object.insert(std::make_pair(hNewWid, pThis));
 	return TRUE;
 }
@@ -67,7 +67,7 @@ BOOL WidDispatch::Destroy( HWID& hWid )
 		return FALSE;
 	}
 	Widget* pWid = it->second;
-	ASSERT(pWid != NULL);
+	WFX_CONDITION(pWid != NULL);
 	Widget* pParent = pWid->GetParent();
 	if (pParent != NULL)
 	{
@@ -99,10 +99,10 @@ void WidDispatch::RecycleHwid( HWID& hWid )
 	hWid = INVALID_HWID;
 }
 
-void WidDispatch::DrawWid( Widget* pWid, const RECT& rcPaint )
+void WidDispatch::DrawWid( Widget* pWid, const Rect& rcPaint )
 {
-	ASSERT(m_hWnd != NULL);
-	ASSERT(pWid != NULL);
+	WFX_CONDITION(m_hWnd != NULL);
+	WFX_CONDITION(pWid != NULL);
 	if (!pWid->IsShow())
 	{
 		return;
@@ -115,11 +115,11 @@ void WidDispatch::DrawWid( Widget* pWid, const RECT& rcPaint )
 	__end_mem_draw;
 }
 
-void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const RECT& rcPaint)
+void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const Rect& rcPaint)
 {
-	ASSERT(pWid != NULL);
-	RECT rcTemp = {0};
-	RECT rcItem = pWid->GetRect();
+	WFX_CONDITION(pWid != NULL);
+	Rect rcTemp;
+	Rect rcItem = pWid->GetRect();
 
 	if (!::IntersectRect(&rcTemp, &rcPaint, &rcItem))
 		return;
@@ -134,7 +134,7 @@ void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const RECT& rcPaint)
 	for (std::vector<Widget*>::iterator it = 
 		rgpChildren.begin(); it != rgpChildren.end(); ++it)
 	{
-		ASSERT((*it) != NULL);
+		WFX_CONDITION((*it) != NULL);
 		if (!::IntersectRect(&rcTemp, &rcItem, &(*it)->GetRect()))
 			continue;
 		DrawGen((*it), hdc, rcPaint);
@@ -144,7 +144,7 @@ void WidDispatch::DrawGen( Widget* pWid, HDC hdc, const RECT& rcPaint)
 LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lResult = 1;
-	POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+	Point pt(lParam);
 	Widget* pWid = NULL;
 
 	if (uMsg != WM_PAINT
@@ -166,7 +166,7 @@ LRESULT WidDispatch::HandleMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 
 BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& lResult, DWORD dwMsgMapID )
 {
-	POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+	Point pt(lParam);
 	Widget* pWid = NULL;
 	switch(uMsg)
 	{
@@ -175,10 +175,10 @@ BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESU
 	case WM_PAINT:
 		{
 			// Handle WM_PAINT message
-			RECT rcPaint = { 0 };
+			Rect rcPaint;
 			if( !::GetUpdateRect(m_hWnd, &rcPaint, FALSE) ) 
 				return 1;
-			PAINTSTRUCT ps = { 0 };
+			PAINTSTRUCT ps;
 			::BeginPaint(m_hWnd, &ps);
 			OnPaint(ps.rcPaint);
 			::EndPaint(m_hWnd, &ps);
@@ -217,7 +217,7 @@ BOOL WidDispatch::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESU
 		break;
 	case WM_LBUTTONDOWN:
 		{
-			ASSERT(m_hWnd != NULL);
+			WFX_CONDITION(m_hWnd != NULL);
 			::SetFocus(m_hWnd);
 			pWid = GetWidPt(pt);
 			if (pWid != NULL)
@@ -320,9 +320,9 @@ Widget* WidDispatch::GetWidPt( POINT pt )
 	for (std::map<HWID, Widget*>::iterator it = m_Handle2Object.begin();
 		it != m_Handle2Object.end(); ++it)
 	{
-		ASSERT(it->second != NULL);
-		RECT rcWid = it->second->GetRect();
-		if (::PtInRect(&rcWid, pt))
+		WFX_CONDITION(it->second != NULL);
+		Rect rcWid = it->second->GetRect();
+		if (rcWid.PtInRect(pt))
 		{
 			rgpWidInPt.push_back(it->second);
 		}
@@ -349,8 +349,8 @@ Widget* WidDispatch::GetWidPt(const std::vector<Widget*>& rgpWid)
 	if (it != rgpWid.end())
 	{
 		pWid = *it;
-		ASSERT(pWid != NULL);
-		RECT rcWid = pWid->GetRect();
+		WFX_CONDITION(pWid != NULL);
+		Rect rcWid = pWid->GetRect();
 		float fArea = (rcWid.right - rcWid.left) * (rcWid.bottom - rcWid.top);
 		float fMinArea = fArea;
 		for (; it != rgpWid.end(); ++it)
@@ -379,7 +379,7 @@ void WidDispatch::SetInstance( HINSTANCE hInstance )
 
 BOOL WidDispatch::SetParent( Widget* pThis, Widget* pParent )
 {
-	ASSERT(pThis != NULL);
+	WFX_CONDITION(pThis != NULL);
 	if (pParent == NULL)
 	{
 		HWID hWid = pThis->GetHwid();
@@ -412,27 +412,27 @@ Widget* WidDispatch::FromHwid( HWID hWid ) const
 	return NULL;
 }
 
-RECT WidDispatch::FromRect( const RECT& rc )
+Rect WidDispatch::FromRect( const Rect& rc )
 {
-	RECT rcc = {0};
+	Rect rcc;
 	return rcc;
 }
 
-void WidDispatch::OnPaint(const RECT& rcPaint)
+void WidDispatch::OnPaint(const Rect& rcPaint)
 {
 	// Note: Only orphans need to handle WM_PAINT message,
 	// parents will handle it for their children.
 	for (std::map<HWID, Widget*>::iterator it = m_h2oOrphan.begin();
 		it != m_h2oOrphan.end(); ++it)
 	{
-		ASSERT(it->second != NULL);
+		WFX_CONDITION(it->second != NULL);
 		DrawWid(it->second, rcPaint);
 	}
 }
 
 void WidDispatch::ShowWid( Widget* pWid, WORD wShow )
 {
-	ASSERT(pWid != NULL);
+	WFX_CONDITION(pWid != NULL);
 	pWid->MyShowWid(wShow);
 	std::vector<Widget*> rgpChilren;
 	pWid->GetChildren(rgpChilren);
@@ -445,26 +445,26 @@ void WidDispatch::ShowWid( Widget* pWid, WORD wShow )
 
 void WidDispatch::SetCapture( Widget* pWid )
 {
-	ASSERT(m_hWnd != NULL);
-	ASSERT(pWid != NULL);
-	ASSERT(*pWid != INVALID_HWID);
+	WFX_CONDITION(m_hWnd != NULL);
+	WFX_CONDITION(pWid != NULL);
+	WFX_CONDITION(*pWid != INVALID_HWID);
 	m_h2oCaptured = std::make_pair(pWid->GetHwid(), pWid);
 	::SetCapture(m_hWnd);
 }
 
 void WidDispatch::SetFocus(Widget* pWid)
 {
-	ASSERT(m_hWnd != NULL);
-	ASSERT(pWid != NULL);
-	ASSERT(*pWid != INVALID_HWID);
+	WFX_CONDITION(m_hWnd != NULL);
+	WFX_CONDITION(pWid != NULL);
+	WFX_CONDITION(*pWid != INVALID_HWID);
 	m_h2oFocused = std::make_pair(pWid->GetHwid(), pWid);
 }
 
 void WidDispatch::SetLButtonDown(Widget* pWid)
 {
-	ASSERT(m_hWnd != NULL);
-	ASSERT(pWid != NULL);
-	ASSERT(*pWid != INVALID_HWID);
+	WFX_CONDITION(m_hWnd != NULL);
+	WFX_CONDITION(pWid != NULL);
+	WFX_CONDITION(*pWid != INVALID_HWID);
 	m_h2oLButtonDown = std::make_pair(pWid->GetHwid(), pWid);
 }
 void WidDispatch::ReleaseCapture()
@@ -483,7 +483,7 @@ Widget* WidDispatch::GetObject( const std::pair<HWID, Widget*>& h2o )
 {
 	if (h2o.first != INVALID_HWID)
 	{
-		ASSERT(h2o.second != NULL);
+		WFX_CONDITION(h2o.second != NULL);
 		return h2o.second;
 	}
 	return NULL;
@@ -503,9 +503,9 @@ void WidDispatch::SetCapturedH2O( const std::pair<HWID, Widget*>& h2o )
 
 void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*= TRUE*/ )
 {
-	ASSERT(pWid != NULL);
-	RECT rcWid = pWid->GetRect();
-	RECT rcSB = {0};
+	WFX_CONDITION(pWid != NULL);
+	Rect rcWid = pWid->GetRect();
+	Rect rcSB;
 	if (uBarFlag == WESB_BOTH)
 	{
 		if (bEnable)
@@ -584,7 +584,7 @@ void WidDispatch::EnableScrollBar( Widget* pWid, UINT uBarFlag, BOOL bEnable /*=
 	}
 	else
 	{
-		ASSERT(FALSE);
+		WFX_CONDITION(FALSE);
 	}
 }
 
@@ -603,26 +603,23 @@ void WidDispatch::PreProcessMsg( Widget* pWid, UINT uMsg, WPARAM wParam, LPARAM 
 
 }
 
-void WidDispatch::SetWidRect( Widget* pWid, const RECT& rc )
+void WidDispatch::SetWidRect( Widget* pWid, const Rect& rc )
 {
-	ASSERT(pWid != NULL);
+	WFX_CONDITION(pWid != NULL);
 
-	RECT rcWid;
+	Rect rcWid;
 	rcWid = pWid->GetRect();
-	RECT rcSB = rcWid;
-	RECT rcDraw = rcWid;
-	SIZE sz = {0};
-	LRESULT lResult = pWid->SendWidMessage(WUM_QUERY_VIRTUAL_SIZE);
-	sz.cx = LOWORD(lResult);
-	sz.cy = HIWORD(lResult);
+	Rect rcSB = rcWid;
+	Rect rcDraw = rcWid;
+	Size sz(pWid->SendWidMessage(WUM_QUERY_VIRTUAL_SIZE));
 	BOOL bOutRangeHorz = rcWid.right - rcWid.left < sz.cx;
 	BOOL bOutRangeVert = rcWid.bottom - rcWid.top < sz.cy;
 	if (pWid->GetSBFlag() & WESB_VERT)
 	{
-		ASSERT(pWid->GetScrollBar(SB_VERT) != NULL);
+		WFX_CONDITION(pWid->GetScrollBar(SB_VERT) != NULL);
 		if (!bOutRangeVert)
 		{
-			memset(&rcSB, 0, sizeof(RECT));
+			memset(&rcSB, 0, sizeof(Rect));
 		}
 		else
 		{
@@ -637,10 +634,10 @@ void WidDispatch::SetWidRect( Widget* pWid, const RECT& rc )
 	rcSB = rcWid;
 	if (pWid->GetSBFlag() & WESB_HORZ)
 	{
-		ASSERT(pWid->GetScrollBar(SB_HORZ) != NULL);
+		WFX_CONDITION(pWid->GetScrollBar(SB_HORZ) != NULL);
 		if (!bOutRangeHorz)
 		{
-			memset(&rcSB, 0, sizeof(RECT));
+			memset(&rcSB, 0, sizeof(Rect));
 		}
 		else
 		{
@@ -671,14 +668,14 @@ Widget* WidDispatch::GetWidgetFromTimer( UINT_PTR uIDEvent )
 	return m_pTimer->GetWidgetFromTimer(uIDEvent);
 }
 
-void WidDispatch::Invalidate( const RECT& rc )
+void WidDispatch::Invalidate( const Rect& rc )
 {
 	::InvalidateRect(m_hWnd, &rc, FALSE);
 }
 
-void WidDispatch::DrawBkgnd( Widget* pWid, HDC hdc, const RECT& rc )
+void WidDispatch::DrawBkgnd( Widget* pWid, HDC hdc, const Rect& rc )
 {
-	//ASSERT(pWid != NULL);
+	//WFX_CONDITION(pWid != NULL);
 	//Widget* pParent = pWid->GetParent();
 
 	//Gdiplus::Color clrBkgnd;

@@ -15,15 +15,16 @@
 
 BEGIN_NAMESPACE_WFX
 
-class WidgetBase;
+class MsgMap;
 class Widget;
 class WidDispatch;
 class Grid;
 class Layout;
 
-class Layout : public WidgetBase
+class Layout : public MsgMap
 {
 	WFX_DECLARE_FACTORY(Layout);
+
 protected:
 	Layout();
 public:
@@ -33,10 +34,10 @@ public:
 	struct Desc
 	{
 		INT		m_nPos;
-		RECT	m_rcMargin;
+		Rect	m_rcMargin;
 	};
 public:
-	virtual void DoLayout(Widget* pWid, Desc* pDesc, const RECT& rcGrid);
+	virtual void DoLayout(Widget* pWid, Desc* pDesc, const Rect& rcGrid);
 
 };
 
@@ -74,26 +75,6 @@ protected:
 	PLayout m_pLayout;
 	PLayoutFactory m_pLayoutFactory;
 };
-
-LRESULT Grid::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	RECT rc = {0};
-	ULONG nItems = m_rgWidLayout.size();
-	for (ULONG i = 0; i < nItems; i++)
-	{
-		ASSERT(m_rgWidLayout[i].first != NULL);
-		m_rgWidLayout[i].first->Create(rc, m_pDispatch, this);
-	}
-	return 1;
-}
-
-LRESULT Grid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
-{
-	DoLayout();
-	return 1;
-}
-
-
 
 typedef SharedPtr<Grid> PGrid;
 

@@ -24,7 +24,7 @@ BOOL Layout::ProcessMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& l
 	return TRUE;
 }
 
-void Layout::DoLayout( Widget* pWid, Desc* pDesc, const RECT& rcGrid )
+void Layout::DoLayout( Widget* pWid, Desc* pDesc, const Rect& rcGrid )
 {
 
 }
@@ -52,13 +52,31 @@ void Grid::DoLayout()
 	{
 		m_pLayout = m_pLayoutFactory->CreateObject();
 	}
-	RECT rcGrid = GetRect();
+	Rect rcGrid = GetRect();
 	ULONG nItems = m_rgWidLayout.size();
 	for (ULONG i = 0; i < nItems; i++)
 	{
 		m_pLayout->DoLayout(m_rgWidLayout[i].first, 
 			&(m_rgWidLayout[i].second), rcGrid);
 	}
+}
+
+LRESULT Grid::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	Rect rc;
+	ULONG nItems = m_rgWidLayout.size();
+	for (ULONG i = 0; i < nItems; i++)
+	{
+		WFX_CONDITION(m_rgWidLayout[i].first != NULL);
+		m_rgWidLayout[i].first->Create(rc, m_pDispatch, this);
+	}
+	return 1;
+}
+
+LRESULT Grid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
+{
+	DoLayout();
+	return 1;
 }
 
 LayoutDispatch::LayoutDispatch()
@@ -79,10 +97,10 @@ Grid* LayoutDispatch::GetGrid() const
 LRESULT LayoutDispatch::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 						 BOOL& bHandled)
 {
-	ASSERT(m_pRoot != NULL);
+	WFX_CONDITION(m_pRoot != NULL);
 	if (m_pRoot != NULL)
 	{
-		RECT rc = {0};
+		Rect rc;
 		m_pRoot->Create(rc, this);
 	}
 	return 1;
@@ -91,11 +109,11 @@ LRESULT LayoutDispatch::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam,
 LRESULT LayoutDispatch::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam,
 					   BOOL& bHandled)
 {
-	ASSERT(m_pRoot != NULL);
+	WFX_CONDITION(m_pRoot != NULL);
 	if (m_pRoot != NULL)
 	{
-		ASSERT(GetHwnd() != NULL);
-		RECT rcClient = {0};
+		WFX_CONDITION(GetHwnd() != NULL);
+		Rect rcClient;
 		::GetClientRect(GetHwnd(), &rcClient);
 		m_pRoot->SetRect(rcClient);
 	}

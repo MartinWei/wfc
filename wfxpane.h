@@ -8,24 +8,18 @@
 // See these sources for detailed information regarding the
 // Widget Foundation Classes product.
 //
-#include "StdAfx.h"
-#include "wfxwid.h"
-#include "wfxfrmwk.h"
 
-USING_NAMESPACE_WFX;
+#pragma once
 
-View::View()
-: m_pDoc(NULL)
+#include "wfx.h"
+
+BEGIN_NAMESPACE_WFX
+
+class Widget;
+
+class WFX_API Pane : public Widget
 {
 
-}
+};
 
-Document* View::GetDocument() const
-{
-	return m_pDoc;
-}
-
-void View::SetDocument( Document* pDoc )
-{
-	m_pDoc = pDoc;
-}
+END_NAMESPACE_WFX

@@ -247,6 +247,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\tabctrl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\TextBox.cpp"
 				>
 			</File>
@@ -309,7 +313,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wfxpane.h"
+				>
+			</File>
+			<File
 				RelativePath=".\wfxrender.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wfxtabctrl.h"
 				>
 			</File>
 			<File

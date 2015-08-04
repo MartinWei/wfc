@@ -27,7 +27,7 @@ struct WFX_API HeaderInfo
 	DWORD						dwFormat;
 	ULONG						nOrder;
 	DWORD						dwState;
-	RECT						rcPos;
+	Rect						rcPos;
 	ULONG						m_nType;
 	HeaderInfo()
 		: cx(0)
@@ -37,7 +37,6 @@ struct WFX_API HeaderInfo
 		, dwState(WCS_NORMAL)
 		, m_nType(WCT_TEXT)
 	{
-		memset(&rcPos, 0, sizeof(RECT));
 	}
 	void SetImage(const String& strFile)
 	{
@@ -45,9 +44,11 @@ struct WFX_API HeaderInfo
 	}
 };
 
+typedef SharedPtr<HeaderInfo> PHeaderInfo;
+
 typedef SharedPtr<TNode> PTNode;
 
-class WFX_API TNode /*: public WidgetBase*/
+class WFX_API TNode /*: public MsgMap*/
 {
 public:
 	TNode();
@@ -80,16 +81,16 @@ protected:
 	std::vector<PTNode> m_rgpChildren;
 };
 
-class WFX_API Cell : public WidgetBase
+class WFX_API Cell : public UnitBase
 {
 public:
 	Cell();
-	virtual ~Cell();
 public:
 	WFX_BEGIN_MSG_MAP(Cell)
 		WFX_MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
 		WFX_MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
 		WFX_MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+		WFX_CHAIN_MSG_MAP(UnitBase)
 	WFX_END_MSG_MAP()
 public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
@@ -99,20 +100,14 @@ public:
 	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 public:
-	virtual void Draw(HDC hdc,const RECT& rcPaint, DWORD dwState,
+	virtual void Draw(HDC hdc,const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
-public:
-	void SetParent(Widget* pParent);
-	void SetRect(const RECT& rc);
-protected:
-	Widget* m_pParent;
-	RECT m_rc;
 };
 
 class WFX_API LayerCell : public Cell
 {
 public:
-	virtual void Draw(HDC hdc,const RECT& rcPaint, DWORD dwState,
+	virtual void Draw(HDC hdc,const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
 public:
 	WFX_BEGIN_MSG_MAP(LayerCell)
@@ -161,12 +156,12 @@ public:
 	HeaderCtrl();
 public:
 	ULONG GetItemCount() const;
-	BOOL GetItemRect(ULONG nIndex, RECT& rc);
+	BOOL GetItemRect(ULONG nIndex, Rect& rc);
 	ULONG AddItem(const HeaderInfo& hdi);
 	ULONG InsertItem(ULONG nPos, const HeaderInfo& hdi);
 	BOOL RemoveItem(ULONG nPos);
 protected:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 	Cell* GetCell(ULONG nCol);
 public:
 	ULONG GetCellType(ULONG nCol) const;
@@ -193,7 +188,7 @@ protected:
 	BOOL Verify() const;
 protected:
 	std::vector<SharedPtr<HeaderInfo> > m_rgpHdi;
-	RECT m_rgRowNumRect;
+	Rect m_rgRowNumRect;
 	LONG m_nSelected;
 	BOOL m_bAscendSort;
 };
@@ -249,7 +244,6 @@ class WFX_API ListCtrl : public VorticalLayerCtrl
 {
 public:
 	ListCtrl();
-	virtual ~ListCtrl();
 public:
 	WFX_BEGIN_MSG_MAP(ListCtrl)
 		WFX_MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -301,8 +295,8 @@ public:
 	Cell* GetCell(const CellID& cellID);
 	Cell* GetCell(ULONG nCellType);
 	BOOL GetCellIndirect(const CellID& cellID, 
-		std::pair<Cell*, RECT>& cell);
-	RECT GetCellRect(ULONG nRow, ULONG nCol);
+		std::pair<Cell*, Rect>& cell);
+	Rect GetCellRect(ULONG nRow, ULONG nCol);
 public:
 	ULONG GetColumnWidth(ULONG nCol) const;
 	BOOL SetColumnWidth(ULONG nCol, ULONG cx);
@@ -342,12 +336,12 @@ public:
 	ULONG Expand(ULONG nRow, BOOL bExpand = TRUE, BOOL bAdjust = FALSE);
 	BOOL IsExpanded(ULONG nRow) const;
 protected:
-	BOOL GetCellID( POINT pt, std::pair<CellID, RECT>& cellID);
+	BOOL GetCellID( POINT pt, std::pair<CellID, Rect>& cellID);
 	BOOL IsValidCellID(const CellID& cellID) const;
 protected:
-	virtual void OnDraw(HDC hdc, const RECT& rcPaint);
+	virtual void OnDraw(HDC hdc, const Rect& rcPaint);
 protected:
-	virtual SIZE EstimateVirualSize();
+	virtual Size EstimateVirualSize();
 protected:
 	BOOL CalcCol();
 	BOOL CalcRow();
@@ -356,8 +350,8 @@ protected:
 	BOOL Verify() const;
 protected:
 	SharedPtr<HeaderCtrl> m_pHeadCtrl;
-	std::map<CellID, RECT> m_rgRect;
-	std::vector<RECT> m_rgRowNumRect;
+	std::map<CellID, Rect> m_rgRect;
+	std::vector<Rect> m_rgRowNumRect;
 	ULONG m_nHeadHeight;
 	ULONG m_nRowNumBarWidth;
 	LONG m_nStartRow;
@@ -369,7 +363,7 @@ protected:
 	CellID m_cellSelected;
 	CellID m_cellMouseMove;
 	BOOL m_bHasSubItem;
-	std::vector<std::vector<RECT> > m_rgRectFast;
+	std::vector<std::vector<Rect> > m_rgRectFast;
 };
 
 class WFX_API TreeCtrl : public VorticalLayerCtrl

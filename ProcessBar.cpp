@@ -41,7 +41,7 @@ ULONG ProcessBar::GetPos() const
 	return m_nPos;
 }
 
-void ProcessBar::OnDraw( HDC hdc, const RECT& rc )
+void ProcessBar::OnDraw( HDC hdc, const Rect& rc )
 {
 	WfxRender::DrawProcessBar(hdc, GetRect(), GetState(), m_nMax, m_nPos, m_pDispatch);
 }

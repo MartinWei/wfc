@@ -29,23 +29,18 @@ CheckBoxItem::CheckBoxItem(const String& strChecked,
 
 }
 
-CheckBoxItem::~CheckBoxItem()
+void CheckBoxItem::OnDraw( HDC hdc, const Rect& rcPaint )
 {
-
-}
-
-void CheckBoxItem::OnDraw( HDC hdc, const RECT& rcPaint )
-{
-	SharedPtr<Gdiplus::Image> pImage = GetImage();
+	PImage pImage = GetImage();
 	if (pImage != NULL)
 	{
 		return;
 	}
-	RECT rc = GetRect();
+	Rect rc = GetRect();
 	WfxRender::DrawCheckBoxItem(hdc, rc, GetState(), IsChecked(), m_pDispatch);
 }
 
-SharedPtr<Gdiplus::Image> CheckBoxItem::GetImage() const
+PImage CheckBoxItem::GetImage() const
 {
 	return m_bChecked? m_pImageChecked : m_pImageUnCheck;
 }
@@ -59,14 +54,14 @@ CheckBox::CheckBox()
 
 LRESULT CheckBox::OnCreate( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	RECT rc;
+	Rect rc;
 	m_pItem->Create(rc, m_pDispatch, this);
 	return 0;
 }
 
 LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 {
-	RECT rc = GetRect();
+	Rect rc = GetRect();
 	rc.left += 2;
 	rc.right = rc.left + WID_CKB_SIZE;
 	rc.top = rc.top + (rc.bottom - rc.top - WID_CKB_SIZE) / 2;
@@ -76,7 +71,7 @@ LRESULT CheckBox::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 	return 0;
 }
 
-void CheckBox::OnDraw( HDC hdc, const RECT& rcPaint )
+void CheckBox::OnDraw( HDC hdc, const Rect& rcPaint )
 {
  WfxRender::DrawCheckBox(hdc, GetText(), GetRect(), GetState(), m_lOffset, m_pDispatch);
 }
