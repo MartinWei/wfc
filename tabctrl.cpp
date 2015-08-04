@@ -15,7 +15,7 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 TabItem::TabItem( const ULONG nTabID, const String& strLabel, 
 				 Widget* pWid, Widget* pParent /*= NULL*/ )
 : UnitBase(pParent)
@@ -34,7 +34,7 @@ void TabItem::Draw( HDC hdc, const Rect& rcPaint, BOOL bSelected /*= FALSE*/ )
 		WID_TEXT_STATIC, DT_VCENTER | DT_SINGLELINE | DT_CENTER);
 	WfxRender::DrawFrame(hdc ,GetRect(), WBTN_BKGND_MOUSE);
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 TabCtrl::TabCtrl()
 : m_nLocation(LOCACTION_TOP)
 , m_nTabHeight(20)

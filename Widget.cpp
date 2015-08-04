@@ -13,14 +13,14 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 LRESULT MsgMap::SendWidMessage( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	LRESULT lResult = 0;
 	ProcessMessage(uMsg, wParam, lParam, lResult, 0);
 	return lResult;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 AttrBase::AttrBase(Widget* pParent /*= NULL*/)
 : m_strText(L"")
 , m_dwFormat(DT_SINGLELINE | DT_VCENTER | DT_LEFT)
@@ -122,7 +122,7 @@ void AttrBase::SetParent( Widget* pParent )
 {
 	m_pParent = pParent;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Widget::Widget(void)
 : m_bNC(FALSE)
 , m_pDispatch(NULL)
@@ -587,7 +587,7 @@ void Widget::SetID( UINT nID )
 {
 	m_nID = nID;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 UnitBase::UnitBase(Widget* pWid /*= NULL*/)
 : AttrBase(pWid)
 {
@@ -605,7 +605,7 @@ LRESULT UnitBase::SendParentMessage( UINT uMsg, WPARAM wParam /*= 0*/, LPARAM lP
 		return m_pParent->SendWidMessage(uMsg, wParam, lParam);
 	return 0;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ScrollBar::ScrollBar( int nBar )
 : m_nBar(nBar)
 , m_pScrollInfo(new SCROLLINFO)
@@ -924,7 +924,7 @@ int ScrollBar::GetSlierMid()
 	else
 		return rcSlider.top + m_nSliderSize / 2;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Slider::Slider( int nBar )
 : m_nBar(nBar)
 , m_bInSlider(FALSE)
@@ -989,7 +989,7 @@ void Slider::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	WfxRender::DrawSlider(hdc, GetRect(), GetState(), m_pDispatch);
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Timer::Timer( WidDispatch* pDispatch )
 : m_pDispatch(pDispatch)
 , m_nTimerID(0x1000)
@@ -1057,12 +1057,11 @@ Widget* Timer::GetWidgetFromTimer( UINT_PTR uIDEvent )
 	return FALSE;
 }
 
-
 void Timer::Destroy( Widget* pWid )
 {
 
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ImageWid::ImageWid()
 {
 
@@ -1134,7 +1133,7 @@ PImage ImageWid::GetImageFromState()
 	}
 	return pImage;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 InPlaceWid::InPlaceWid()
 : m_pWindow(NULL)
 {

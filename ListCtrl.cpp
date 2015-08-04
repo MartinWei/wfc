@@ -15,7 +15,7 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 TNode::TNode()
 : m_pParent(NULL)
 , m_bExpanded(TRUE)
@@ -233,7 +233,7 @@ TNode* TNode::GetAt_Expanded(ULONG nItem, ULONG& nItems, TNode* pNode)
 	}
 	return pResultNode;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Cell::Cell()
 {
 
@@ -266,7 +266,7 @@ void Cell::Draw( HDC hdc, const Rect& rcPaint,  DWORD dwState,
 	WfxRender::DrawHeadCell(hdc, rcPaint, dwState, strText,
 		clrText, dwFormat);
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 void LayerCell::Draw(HDC hdc,const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat)
 {
@@ -278,7 +278,7 @@ LRESULT LayerCell::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
 {
 	return SendParentMessage(WUM_LC_CELL_EXPAND, wParam);;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ULONG HeaderCtrl::GetItemCount() const
 {
 	return m_rgpHdi.size();
@@ -478,7 +478,7 @@ BOOL HeaderCtrl::Verify() const
 	ULONG nTotalCol = GetTotalColumns();
 	return nTotalCol > 0;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 CellID::CellID(LONG nRow /*= -1*/, LONG nCol /*= -1*/)
 : m_nRow(nRow)
 , m_nCol(nCol)
@@ -522,7 +522,7 @@ void CellID::Clear()
 	m_nRow = -1;
 	m_nCol = -1;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 VorticalLayerCtrl::VorticalLayerCtrl()
 : m_pRoot(new TNode)
 , m_bCached(TRUE)
@@ -627,7 +627,7 @@ void VorticalLayerCtrl::RefreshCache()
 {
 	m_bCached = TRUE;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ListCtrl::ListCtrl()
 : m_pHeadCtrl(new HeaderCtrl)
 , m_nHeadHeight(WID_LC_HEAD_HEIGHT)

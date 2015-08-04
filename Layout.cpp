@@ -28,7 +28,7 @@ void Layout::DoLayout( Widget* pWid, Desc* pDesc, const Rect& rcGrid )
 {
 
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Grid::Grid( CPLayoutFactory& pFactory )
 : m_pLayoutFactory(pFactory)
 {
@@ -78,7 +78,7 @@ LRESULT Grid::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled )
 	DoLayout();
 	return 1;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 LayoutDispatch::LayoutDispatch()
 {
 

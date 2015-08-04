@@ -12,7 +12,7 @@
 #include "wfxwid.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Window::Window()
 : m_pDispatch(new WidDispatch)
 , m_hWnd(NULL)
@@ -311,7 +311,7 @@ UINT_PTR Window::SetTimer( UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFun
 {
 	return ::SetTimer(m_hWnd, nIDEvent, uElapse, lpTimerFunc);
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 InPlaceWnd::InPlaceWnd()
 {
 

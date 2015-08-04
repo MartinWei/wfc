@@ -14,7 +14,7 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ComboWnd::ComboWnd()
 : m_pRoot(new Widget)
 {
@@ -91,7 +91,7 @@ LRESULT ComboWnd::OnSize( UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 	
 	return 0;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 ULONG ComboBox::GetItemHeight( ULONG nIndex ) const
 {
 	nIndex;

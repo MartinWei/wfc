@@ -14,7 +14,8 @@
 
 BEGIN_NAMESPACE_WFX
 
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
+
 // forward declare
 class WidDispatch;
 class Timer;
@@ -39,9 +40,7 @@ class Window;
 		class EditWnd;
 		class ComboWnd;
 		class Menu;
-
-
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // MsgMap Interface of widget
 class WFX_API MsgMap
 {
@@ -51,8 +50,9 @@ public:
 	LRESULT SendWidMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
 
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef BOOL (*DrawFunction)(Widget* pWid, Gdiplus::Graphics& grph);
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API AttrBase
 {
 public:
@@ -87,10 +87,8 @@ protected:
 	Rect m_rect;
 	Widget* m_pParent;
 };
-
 typedef SharedPtr<AttrBase> PBasicAttr;
-
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Widget: the root class of ui classes
 class WFX_API Widget :
 	public MsgMap, public AttrBase
@@ -248,9 +246,8 @@ private:
 	// Event ID
 	UINT m_nID;
 };
-
 typedef SharedPtr<Widget> PWidget;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API UnitBase : public MsgMap, public AttrBase
 {
 public:
@@ -260,8 +257,7 @@ public:
 		LRESULT& lResult, DWORD dwMsgMapID);
 	LRESULT SendParentMessage(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 };
-
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Slider: for ScrollBar
 class WFX_API Slider : public Widget
 {
@@ -290,10 +286,9 @@ protected:
 	Point m_ptLButtonDown;
 	int m_nBar;
 };
-
 typedef SharedPtr<Slider> PSlider;
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef SharedPtr<SCROLLINFO> PSCROLLINFO;
-//////////////////////////////////////////////////////////////////////////
 // ScrollBar: Common ScrollBar
 class WFX_API ScrollBar : public Widget
 {
@@ -348,9 +343,8 @@ protected:
 	PWidget m_pArrow2;
 	PWidget m_pSlider;
 };
-
 typedef SharedPtr<ScrollBar> PScrollBar;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ImageWid : public Widget
 {
 public:
@@ -373,16 +367,14 @@ protected:
 	PImage m_pPush;
 	PImage m_pChecked;
 };
-
 typedef SharedPtr<ImageWid> PImageWid;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API SplitterBar : public Widget
 {
 
 };
-
 typedef SharedPtr<SplitterBar> PSplitterBar;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Button : public ImageWid
 {
 public:
@@ -407,9 +399,8 @@ protected:
 	BOOL m_bChecked;
 	BOOL m_bCheckable;
 };
-
 typedef SharedPtr<Button> PButton;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API CheckBoxItem : public Button
 {
 public:
@@ -426,16 +417,14 @@ protected:
 	PImage m_pImageChecked;
 	PImage m_pImageUnCheck;
 };
-
 typedef SharedPtr<CheckBoxItem> PCheckBoxItem;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ToolTip : public Button
 {
 
 };
-
 typedef SharedPtr<ToolTip> PToolTip;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API CheckBox : public Widget
 {
 public:
@@ -457,32 +446,28 @@ protected:
 	ULONG m_lOffset;
 	PButton m_pItem;
 };
-
 typedef SharedPtr<CheckBox> PCheckBox;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API RadioButtonItem : public CheckBoxItem
 {
 public:
 	virtual void OnDraw(HDC hdc, const Rect& rc);
 };
-
 typedef SharedPtr<RadioButtonItem> PRadioButtonItem;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API RadioButton : public CheckBox
 {
 public:
 	RadioButton();
 };
-
 typedef SharedPtr<RadioButton> PRadioButton;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Label : public Widget
 {
 
 };
-
 typedef SharedPtr<Label> PLabel;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ProcessBar : public Widget
 {
 public:
@@ -497,9 +482,8 @@ protected:
 	ULONG m_nMax;
 	ULONG m_nPos;
 };
-
 typedef SharedPtr<ProcessBar> PProcessBar;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API InPlaceWid : public Widget
 {
 public:
@@ -517,9 +501,8 @@ protected:
 protected:
 	InPlaceWnd* m_pWindow;
 };
-
 typedef SharedPtr<InPlaceWid> PInPlaceWid;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TextBox : public InPlaceWid
 {
 public:
@@ -547,9 +530,8 @@ protected:
 	WORD m_wMode;
 	BOOL m_bEditting;
 };
-
 typedef SharedPtr<TextBox> PTextBox;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ComboBox : public InPlaceWid
 {
 public:
@@ -560,11 +542,10 @@ public:
 protected:
 	virtual BOOL Initial();
 };
-
 typedef SharedPtr<ComboBox> PComboBox;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef SharedPtr<WidDispatch> PWidDispatch;
-////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Window: Window for controls
 class WFX_API Window : public MsgMap
 {
@@ -620,9 +601,8 @@ protected:
 	WNDPROC m_OldWndProc;
 	BOOL m_bSubclassed;
 };
-
 typedef SharedPtr<Window> PWindow;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API InPlaceWnd : public Window
 {
 public:
@@ -642,9 +622,8 @@ public:
 protected:
 	InPlaceWid* m_pOwner;
 };
-
 typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TextBoxWnd : public InPlaceWnd
 {
 public:
@@ -664,9 +643,8 @@ public:
 	wfx_msg LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 };
-
 typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ComboWnd : public InPlaceWnd
 {
 public:
@@ -690,24 +668,20 @@ protected:
 	PWidget m_pRoot;
 	std::vector<Widget*> m_rgpItems;
 };
-
 typedef SharedPtr<InPlaceWnd> PInPlaceWnd;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ToolTipWnd : public Window
 {
 
 };
-
 typedef SharedPtr<ToolTipWnd> PToolTipWnd;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Menu : public InPlaceWnd
 {
 
 };
-
 typedef SharedPtr<Menu> PMenu;
-
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // Timer: helper class for WidDispatch
 struct TimerInfo
 {
@@ -724,11 +698,9 @@ struct TimerInfo
 	HWND m_hWnd;
 	UINT_PTR m_nSrcTimer;
 };
-
 typedef SharedPtr<TimerInfo> PTimerInfo;
-
 typedef std::vector<PTimerInfo>::iterator TimerIter;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class Timer
 {
 	friend class WidDispatch;
@@ -747,9 +719,8 @@ protected:
 	std::vector<PTimerInfo> m_rgpTimers; 
 	UINT_PTR m_nTimerID;
 };
-
 typedef SharedPtr<Timer> PTimer;
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 // WidDispatch: dispatch messages for widget
 class WFX_API WidDispatch : public MsgMap
 {
@@ -819,7 +790,6 @@ public:
 private:
 	static HINSTANCE s_hInstance;
 };
-
 typedef SharedPtr<WidDispatch> PWidDispatch;
 
 END_NAMESPACE_WFX

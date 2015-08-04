@@ -31,12 +31,11 @@ public:
 protected:
 	Document* m_pDoc;
 };
-
 typedef Factory<View>							ViewFactory;
 typedef SharedPtr<ViewFactory>					PViewFactory;
 typedef const PViewFactory						CPViewFactroy;
 typedef SharedPtr<View>							PView;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Document : public MsgMap
 {
 	WFX_DECLARE_FACTORY(Document);
@@ -53,18 +52,15 @@ public:
 protected:
 	View* m_pView;
 };
-
 typedef Factory<Document>						DocFactory;
 typedef SharedPtr<DocFactory>					PDocFactory;
 typedef const PDocFactory						CPDocFactory;
 typedef SharedPtr<Document>						PDocutment;
-
 typedef std::pair<PDocFactory, PViewFactory>	Doc2ViewFactory;
 typedef std::vector<Doc2ViewFactory>			Doc2ViewFactoryList;
-
 typedef std::pair<PDocutment, PView>			Doc2View;
 typedef SharedPtr<Doc2View>						PDoc2View;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API DocManager : public MsgMap
 {
 public:
@@ -85,9 +81,8 @@ protected:
 	PDoc2View			m_pCurDoc2View;
 	LONG m_nCurrent;
 };
-
 typedef SharedPtr<DocManager> PDocManager;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Frame : public Widget
 {
 public:
@@ -100,9 +95,8 @@ protected:
 	PWidget m_pMenuBar;
 	PWidget m_pStatusBar;
 };
-
 typedef SharedPtr<Frame> PFrame;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Application : public MsgMap
 {
 public:
@@ -119,7 +113,6 @@ protected:
 	PDocManager m_pDocMgr;
 	PFrame m_pFrame;
 };
-
 typedef SharedPtr<Application> PApplication;
 
 END_NAMESPACE_WFX

@@ -14,7 +14,7 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 CheckBoxItem::CheckBoxItem()
 : Button(TRUE)
 {
@@ -44,7 +44,7 @@ PImage CheckBoxItem::GetImage() const
 {
 	return m_bChecked? m_pImageChecked : m_pImageUnCheck;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 CheckBox::CheckBox()
 : m_pItem(new CheckBoxItem)
 , m_lOffset(0)

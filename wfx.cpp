@@ -17,7 +17,7 @@
 #endif
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 void __Trace( const wchar_t* pstrFormat, ... )
 {
 #ifdef _DEBUG
@@ -38,7 +38,7 @@ void __Trace( const wchar_t* pstrFormat, ... )
 	::OutputDebugStringW(str.c_str());
 #endif
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 void String::Format( const wchar_t* pszFormat, ... )
 {
 	va_list arglist;
@@ -94,7 +94,7 @@ String& String::operator=(const String& rh)
 	std::wstring::operator=(rh);
 	return *this;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Rect::Rect()
 {
 	Empty();
@@ -184,7 +184,7 @@ BOOL Rect::PtInRect( POINT pt ) const
 {
 	return ::PtInRect((tagRECT*)this, pt);
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Size::Size()
 {
 	Empty();
@@ -224,7 +224,7 @@ Size::operator LPSIZE()
 {
 	return (tagSIZE*)this;
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 Point::Point( )
 {
 	Empty();

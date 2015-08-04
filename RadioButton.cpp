@@ -14,7 +14,7 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 void RadioButtonItem::OnDraw( HDC hdc, const Rect& rcPaint )
 {
 	SharedPtr<Gdiplus::Image> pImage = GetImage();

@@ -14,7 +14,7 @@
 #include "wfxrender.h"
 
 USING_NAMESPACE_WFX;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 HWND TextBoxWnd::CreateInPlaceWindow()
 {
 	TextBox* pTextBox = dynamic_cast<TextBox*>(m_pOwner);
@@ -84,7 +84,7 @@ void TextBoxWnd::OnInPlaceWindowKillFocus()
 	}
 	m_pOwner->SetText(GetText());
 }
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 TextBox::TextBox( WORD wMode /*= WID_TBM_READWRITE*/ )
 : m_wMode(wMode)
 , m_bEditting(FALSE)

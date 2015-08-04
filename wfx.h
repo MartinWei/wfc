@@ -60,6 +60,7 @@ DECLARE_HANDLE	(HWID);
 
 BEGIN_NAMESPACE_WFX
 
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API String : public std::wstring
 {
 public:
@@ -75,7 +76,7 @@ public:
 	static int GetFormattedLength(const wchar_t* pszFormat, va_list args);
 	static int Format(wchar_t* pszBuffer, ULONG nLength, const wchar_t* pszFormat, va_list args);
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 template<class T>
 class Factory
 {
@@ -91,7 +92,7 @@ public:
 
 #define WFX_CREATE_FACTORY(classname) \
 	SharedPtr<Factory<classname> >(new Factory<classname>())
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Rect : public tagRECT
 {
 public:
@@ -113,7 +114,7 @@ public:
 	operator LPCRECT();
 	BOOL PtInRect(POINT pt) const;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Size : public tagSIZE
 {
 public:
@@ -126,7 +127,7 @@ public:
 	operator LPSIZE();
 
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Point : public tagPOINT
 {
 public:

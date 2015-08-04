@@ -18,7 +18,7 @@ BEGIN_NAMESPACE_WFX
 class ListCtrl;
 class TreeCtrl;
 class TNode;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 struct WFX_API HeaderInfo
 {
 	ULONG						cx;
@@ -43,11 +43,9 @@ struct WFX_API HeaderInfo
 		pImage.reset(Gdiplus::Image::FromFile(strFile.c_str()));
 	}
 };
-
 typedef SharedPtr<HeaderInfo> PHeaderInfo;
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 typedef SharedPtr<TNode> PTNode;
-
 class WFX_API TNode /*: public MsgMap*/
 {
 public:
@@ -80,7 +78,7 @@ protected:
 	BOOL m_bExpanded;
 	std::vector<PTNode> m_rgpChildren;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API Cell : public UnitBase
 {
 public:
@@ -103,7 +101,7 @@ public:
 	virtual void Draw(HDC hdc,const Rect& rcPaint, DWORD dwState,
 		const String& strText, COLORREF clrText, DWORD dwFormat);
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API LayerCell : public Cell
 {
 public:
@@ -118,37 +116,37 @@ public:
 	wfx_msg LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam,
 		BOOL& bHandled);
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API HeadCell : public Cell
 {
 	
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API InPlaceCell : public Cell
 {
 
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TextCell : public InPlaceCell
 {
 
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ComboBoxCell : public InPlaceCell
 {
 
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API CalendarCell : public InPlaceCell
 {
 
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API LinkCell : public Cell
 {
 
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API HeaderCtrl : public Widget
 {
 	friend class ListCtrl;
@@ -192,7 +190,7 @@ protected:
 	LONG m_nSelected;
 	BOOL m_bAscendSort;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API CellID
 {
 public:
@@ -208,7 +206,7 @@ public:
 	LONG m_nRow;
 	LONG m_nCol;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API VorticalLayerCtrl : public Widget
 {
 public:
@@ -239,7 +237,7 @@ protected:
 	std::vector<CacheInfo> m_rgCacheInfo;
 	BOOL m_bCached;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API ListCtrl : public VorticalLayerCtrl
 {
 public:
@@ -365,11 +363,11 @@ protected:
 	BOOL m_bHasSubItem;
 	std::vector<std::vector<Rect> > m_rgRectFast;
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API TreeCtrl : public VorticalLayerCtrl
 {
 };
-
+///////////////////////////*** a gorgeous partition line ***/////////////////////////////
 class WFX_API RichCtrl : public Widget
 {
 
